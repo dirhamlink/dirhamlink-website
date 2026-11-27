@@ -108,9 +108,8 @@ export default function SendMoneyPage() {
     }).select("id, transaction_reference, status").single();
     setLoading(false);
     if (insertError) {
-      setError(insertError.message.includes("transfers")
-        ? "Transaction setup is not finished. Please ask the administrator to run the latest Supabase migration."
-        : insertError.message);
+      console.error("DirhamLink transfer insert failed:", insertError);
+      setError("Transaction could not be created: " + insertError.message);
       return;
     }
     setSuccess("Your transaction record has been created. Reference: " + data.transaction_reference + ". Status: Created. DirhamLink staff must review it and confirm the final customer rate and authorised funding instructions before any payment is made.");
