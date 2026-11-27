@@ -230,3 +230,7 @@ button, input, select { font: inherit; }
 .destination-disclaimer { color:#718096; font-size:11px; line-height:1.7; margin:18px 2px 0; }
 @media(max-width:700px) { .destination-hero {padding:28px 23px;} .destination-stats {grid-template-columns:1fr;} .destination-place-grid {grid-template-columns:1fr 1fr;} .destination-two-col {grid-template-columns:1fr;} .destination-cta {align-items:flex-start;flex-direction:column;} .destination-section-heading {align-items:flex-start;flex-direction:column;} }
 @media(max-width:430px) { .destination-place-grid {grid-template-columns:1fr;} .remittance-bar-wrap {min-width:49px;} .remittance-value {font-size:8px;} }
+
+.rate-card-link { display:block; color:inherit; text-decoration:none; transition:transform .15s ease,box-shadow .15s ease; }
+.rate-card-link:hover { transform:translateY(-2px); box-shadow:0 10px 24px #10233e12; border-color:#b9d2f2; }
+.country-explore { display:block; color:#1769e0; font-size:10px; margin-top:7px; font-weight:700; }
