@@ -19,6 +19,8 @@ export async function GET() {
     return NextResponse.json({
       base: data.base,
       rates: data.rates,
+      customer_rates: { ...data.rates, INR: Number(data.rates.INR) + 1 },
+      inr_margin_per_aed: 1,
       source: data.source ?? "unknown",
       delayed_minutes: data.delayed_minutes ?? 0,
       market_session: data.market_session ?? "unknown",
