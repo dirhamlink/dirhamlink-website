@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
@@ -17,6 +17,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
   const [loading, setLoading] = useState(false);
   const isRegister = mode === "register";
 
+  useEffect(() => {
+    let active = true;
+    supabase.auth.getSession().then(({ data }) => {
+      if (active && data.session) router.replace("/account");
+    });
+    return () => { active = false; };
+  }, [router]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
@@ -28,14 +36,14 @@ export default function AuthForm({ mode }: AuthFormProps) {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: name } },
+          options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/auth/callback` },
         });
         if (signUpError) throw signUpError;
         if (data.session) {
           router.push("/account");
           router.refresh();
         } else {
-          setMessage("Your account request was received. Check your email for a confirmation link before logging in.");
+          setMessage("Your account is created. Open the confirmation link in your email. It will return you to DirhamLink and sign you in automatically.");
         }
       } else {
         const { error: signInError } = await supabase.auth.signInWithPassword({ email, password });
