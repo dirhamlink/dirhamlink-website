@@ -60,7 +60,7 @@ export default function CashDepositsPage(){
    const created=Array.isArray(data)?data[0]:data;
    if(!created?.transfer_id||!created?.created_transaction_reference)throw new Error("The system did not return a transaction reference. Please contact support before submitting again.");
    const selected=beneficiaries.find(b=>b.id===beneficiaryId);
-   setSuccess("Transaction "+created.transaction_reference+" has been created for "+(selected?.recipient_full_name??"your beneficiary")+". Your deposit evidence is pending staff verification. No payout has been initiated.");
+   setSuccess("Transaction "+created.created_transaction_reference+" has been created for "+(selected?.recipient_full_name??"your beneficiary")+". Your deposit evidence is pending staff verification. No payout has been initiated.");
    setAmount("");setReference("");setNote("");setFile(null);
    const [t,d]=await Promise.all([
     supabase.from("transfers").select("id,transaction_reference,send_amount_aed,status").order("created_at",{ascending:false}),
