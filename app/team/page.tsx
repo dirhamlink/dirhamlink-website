@@ -8,7 +8,8 @@ import { supabase } from "../../lib/supabase/client";
 type TeamTransfer = {
   id: string;
   transaction_reference: string;
-  customer_id: string;\n  customer_mobile: string | null;
+  customer_id: string;
+  customer_mobile: string | null;
   destination_country: string;
   destination_currency: string;
   send_amount_aed: number;
@@ -22,7 +23,9 @@ type TeamTransfer = {
   recipient_bank_name: string | null;
   recipient_bank_account_name: string | null;
   recipient_bank_account_number: string | null;
-  recipient_bank_ifsc: string | null;\n  recipient_bank_branch: string | null;\n  recipient_bank_city: string | null;
+  recipient_bank_ifsc: string | null;
+  recipient_bank_branch: string | null;
+  recipient_bank_city: string | null;
   recipient_upi_id: string | null;
 };
 
@@ -133,7 +136,10 @@ export default function TeamPortalPage() {
                   <div><small>Account number</small><strong>{row.recipient_bank_account_number || "Not provided"}</strong></div>
                   <div><small>IFSC / routing code</small><strong>{row.recipient_bank_ifsc || "Not provided"}</strong></div>
                   <div><small>UPI ID</small><strong>{row.recipient_upi_id || "Not provided"}</strong></div>
-                  <div><small>Customer mobile</small><strong>{row.customer_mobile || "Not provided"}</strong></div>\n                  <div><small>Bank branch</small><strong>{row.recipient_bank_branch || "Not provided"}</strong></div>\n                  <div><small>Bank city</small><strong>{row.recipient_bank_city || "Not provided"}</strong></div>\n                  <div><small>Customer ID</small><strong className="team-id">{row.customer_id}</strong></div>
+                  <div><small>Customer mobile</small><strong>{row.customer_mobile || "Not provided"}</strong></div>
+                  <div><small>Bank branch</small><strong>{row.recipient_bank_branch || "Not provided"}</strong></div>
+                  <div><small>Bank city</small><strong>{row.recipient_bank_city || "Not provided"}</strong></div>
+                  <div><small>Customer ID</small><strong className="team-id">{row.customer_id}</strong></div>
                 </div>
                 <p className="team-warning">Reference rate is indicative only. Verify the actual incoming payment in the company bank account and complete compliance checks before authorising any payout.</p>
               </article>;
