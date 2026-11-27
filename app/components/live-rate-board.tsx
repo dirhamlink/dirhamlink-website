@@ -13,6 +13,7 @@ const countries = [
 
 type RateData = {
   rates: Record<string, number>;
+  customer_rates?: Record<string, number>;
   source: string;
   delayed_minutes: number;
   timestamp: string | null;
@@ -52,7 +53,8 @@ export default function LiveRateBoard() {
             <div className="country-top"><span className="flag">{country.flag}</span>{country.name}</div>
             <div className="currency">1 AED to {country.code}</div>
             <div className="rate-value">{data?.rates?.[country.code] ? data.rates[country.code].toFixed(4) : "—"}</div>
-            <div className="rate-note">{error ? "Rate temporarily unavailable" : data ? "Market reference rate" : "Loading rate…"}</div>
+            <div className="rate-note">{error ? "Rate temporarily unavailable" : data ? "Market reference" : "Loading rate…"}</div>
+            {country.code === "INR" && data?.customer_rates?.INR && <><div className="rate-value">{data.customer_rates.INR.toFixed(4)}</div><div className="rate-note">DirhamLink customer rate · +1 INR per AED</div></>}
           </article>
         ))}
       </div>
