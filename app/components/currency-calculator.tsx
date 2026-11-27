@@ -1,24 +1,46 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 const currencies = [
-  { code: "INR", country: "India", rate: 22.7 },
-  { code: "PKR", country: "Pakistan", rate: 75.9 },
-  { code: "NPR", country: "Nepal", rate: 36.2 },
-  { code: "BDT", country: "Bangladesh", rate: 33.1 },
-  { code: "EGP", country: "Egypt", rate: 13.25 },
-  { code: "PHP", country: "Philippines", rate: 15.85 },
+  { code: "INR", country: "India" },
+  { code: "PKR", country: "Pakistan" },
+  { code: "NPR", country: "Nepal" },
+  { code: "BDT", country: "Bangladesh" },
+  { code: "EGP", country: "Egypt" },
+  { code: "PHP", country: "Philippines" },
 ];
 
 export default function CurrencyCalculator() {
   const [amount, setAmount] = useState("1000");
   const [currency, setCurrency] = useState("INR");
+  const [rates, setRates] = useState<Record<string, number>>({});
+  const [status, setStatus] = useState("Loading market rates…");
+  useEffect(() => {
+    let active = true;
+    const load = async () => {
+      try {
+        const response = await fetch("/api/rates", { cache: "no-store" });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Rates unavailable");
+        if (active) {
+          setRates(data.rates || {});
+          setStatus(data.delayed_minutes ? `Market data delayed by ${data.delayed_minutes} minutes` : "Live market reference");
+        }
+      } catch {
+        if (active) setStatus("Market rates temporarily unavailable");
+      }
+    };
+    load();
+    const timer = window.setInterval(load, 60000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, []);
   const selected = currencies.find((item) => item.code === currency) ?? currencies[0];
+  const rate = rates[currency];
   const estimate = useMemo(() => {
     const value = Number(amount);
-    return Number.isFinite(value) && value > 0 ? value * selected.rate : 0;
-  }, [amount, selected.rate]);
+    return Number.isFinite(value) && value > 0 && rate ? value * rate : 0;
+  }, [amount, rate]);
 
   return (
     <div className="calc-box">
@@ -30,10 +52,10 @@ export default function CurrencyCalculator() {
         </select>
       </div>
       <div className="calc-result">
-        <small>Estimated recipient amount · {selected.code}</small>
-        <strong>{estimate.toLocaleString("en-US", { maximumFractionDigits: 2 })} {selected.code}</strong>
+        <small>Estimated amount at market reference · {selected.code}</small>
+        <strong>{rate ? estimate.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + selected.code : "Rate unavailable"}</strong>
       </div>
-      <p className="disclaimer">Illustrative calculation using sample rates only. Not a live quote or confirmation of a transfer. Final rates, fees and eligibility are confirmed separately.</p>
+      <p className="disclaimer">{status}. This is an indicative market reference, not DirhamLink's approved customer selling quote. Final customer rate, fees and transfer eligibility must be confirmed separately.</p>
     </div>
   );
 }
