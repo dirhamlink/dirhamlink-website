@@ -1,0 +1,100 @@
+"use client";
+
+import { FormEvent, useEffect, useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { supabase } from "../../lib/supabase/client";
+
+type Beneficiary = {
+ id:string; destination_country:string; recipient_full_name:string; payout_method:string;
+ bank_name:string|null; account_name:string|null; account_number:string|null;
+ ifsc:string|null; bank_branch:string|null; bank_city:string|null; upi_id:string|null;
+};
+const countries=["India","Pakistan","Nepal","Bangladesh","Egypt","Philippines","Sri Lanka"];
+export default function BeneficiariesPage(){
+ const router=useRouter();
+ const [rows,setRows]=useState<Beneficiary[]>([]);
+ const [userId,setUserId]=useState("");
+ const [country,setCountry]=useState("India");
+ const [name,setName]=useState("");
+ const [method,setMethod]=useState("Bank account");
+ const [bank,setBank]=useState("");
+ const [holder,setHolder]=useState("");
+ const [number,setNumber]=useState("");
+ const [ifsc,setIfsc]=useState("");
+ const [branch,setBranch]=useState("");
+ const [city,setCity]=useState("");
+ const [upi,setUpi]=useState("");
+ const [editing,setEditing]=useState<string|null>(null);
+ const [loading,setLoading]=useState(true);
+ const [saving,setSaving]=useState(false);
+ const [error,setError]=useState("");
+ const [success,setSuccess]=useState("");
+ async function load(){
+  const {data:auth}=await supabase.auth.getUser();
+  if(!auth.user){router.replace("/login");return;}
+  setUserId(auth.user.id);
+  const {data,error}=await supabase.from("beneficiaries").select("*").order("created_at",{ascending:false});
+  if(error)setError(error.message); else setRows((data??[]) as Beneficiary[]);
+  setLoading(false);
+ }
+ useEffect(()=>{void load();},[]);
+ function reset(){
+  setEditing(null);setName("");setBank("");setHolder("");setNumber("");setIfsc("");setBranch("");setCity("");setUpi("");
+ }
+ function edit(row:Beneficiary){
+  setEditing(row.id);setCountry(row.destination_country);setName(row.recipient_full_name);setMethod(row.payout_method);
+  setBank(row.bank_name??"");setHolder(row.account_name??"");setNumber(row.account_number??"");setIfsc(row.ifsc??"");
+  setBranch(row.bank_branch??"");setCity(row.bank_city??"");setUpi(row.upi_id??"");setError("");setSuccess("");
+ }
+ async function save(e:FormEvent){
+  e.preventDefault();setError("");setSuccess("");
+  if(!userId)return;
+  if(method==="UPI transfer"&&!upi.trim()){setError("Enter the recipient UPI ID.");return;}
+  if(["Bank account","Bank transfer"].includes(method)&&(!bank.trim()||!holder.trim()||!number.trim())){setError("Enter bank name, account holder and account number.");return;}
+  setSaving(true);
+  const payload={customer_id:userId,destination_country:country,recipient_full_name:name.trim(),payout_method:method,
+   bank_name:bank.trim()||null,account_name:holder.trim()||null,account_number:number.trim()||null,
+   ifsc:ifsc.trim()||null,bank_branch:branch.trim()||null,bank_city:city.trim()||null,upi_id:upi.trim()||null,updated_at:new Date().toISOString()};
+  const result=editing
+   ? await supabase.from("beneficiaries").update(payload).eq("id",editing)
+   : await supabase.from("beneficiaries").insert(payload);
+  if(result.error)setError(result.error.message);
+  else{setSuccess(editing?"Beneficiary updated.":"Beneficiary saved.");reset();await load();}
+  setSaving(false);
+ }
+ async function remove(id:string){
+  if(!window.confirm("Delete this saved beneficiary?"))return;
+  const {error}=await supabase.from("beneficiaries").delete().eq("id",id);
+  if(error)setError(error.message);else setRows(r=>r.filter(x=>x.id!==id));
+ }
+ return <main className="auth-page"><section className="auth-card dashboard-card">
+  <Link className="brand auth-brand" href="/account"><span className="brand-mark">D</span>DirhamLink</Link>
+  <p className="eyebrow auth-eyebrow">Saved recipients</p><h1>Beneficiaries</h1>
+  <p className="auth-intro">Save recipient details securely for quicker transfer requests. Only your account and authorised DirhamLink staff can access these details.</p>
+  <form className="auth-form" onSubmit={save}>
+   <label>Destination country<select value={country} onChange={e=>setCountry(e.target.value)}>{countries.map(c=><option key={c}>{c}</option>)}</select></label>
+   <label>Recipient full name<input value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={120}/></label>
+   <label>Payout method<select value={method} onChange={e=>setMethod(e.target.value)}><option>Bank account</option><option>Bank transfer</option><option>UPI transfer</option><option>Cash pickup</option></select></label>
+   {["Bank account","Bank transfer"].includes(method)&&<>
+    <label>Bank name<input value={bank} onChange={e=>setBank(e.target.value)} required maxLength={120}/></label>
+    <label>Account holder name<input value={holder} onChange={e=>setHolder(e.target.value)} required maxLength={120}/></label>
+    <label>Account number<input value={number} onChange={e=>setNumber(e.target.value)} required maxLength={40} autoComplete="off"/></label>
+    <label>IFSC / routing code<input value={ifsc} onChange={e=>setIfsc(e.target.value.toUpperCase())} maxLength={20}/></label>
+    <label>Branch<input value={branch} onChange={e=>setBranch(e.target.value)} maxLength={120}/></label>
+    <label>City<input value={city} onChange={e=>setCity(e.target.value)} maxLength={100}/></label>
+   </>}
+   {method==="UPI transfer"&&<label>UPI ID<input value={upi} onChange={e=>setUpi(e.target.value)} required maxLength={120}/></label>}
+   {error&&<p className="auth-error" role="alert">{error}</p>}{success&&<p className="auth-success">{success}</p>}
+   <button className="btn btn-primary auth-submit" disabled={saving}>{saving?"Saving…":editing?"Update beneficiary":"Save beneficiary"}</button>
+   {editing&&<button type="button" className="btn btn-outline auth-submit" onClick={reset}>Cancel edit</button>}
+  </form>
+  <div className="dashboard-section-title">Your saved recipients</div>
+  {loading?<div className="account-notice">Loading beneficiaries…</div>:rows.length===0?<div className="account-notice">No saved beneficiaries yet.</div>:rows.map(row=><article className="dashboard-tile" key={row.id} style={{marginBottom:10}}>
+   <strong>{row.recipient_full_name}</strong><small>{row.destination_country} · {row.payout_method}</small>
+   <small>{row.bank_name||row.upi_id||"Cash pickup"}{row.account_number?" · Account ending "+row.account_number.slice(-4):""}</small>
+   <div style={{display:"flex",gap:8,marginTop:12}}><button className="btn btn-outline" type="button" onClick={()=>edit(row)}>Edit</button><button className="btn btn-outline" type="button" onClick={()=>void remove(row.id)}>Delete</button></div>
+  </article>)}
+  <Link className="auth-home" href="/account">← Back to dashboard</Link>
+ </section></main>;
+}
