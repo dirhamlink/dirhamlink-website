@@ -70,7 +70,8 @@ export default function CashDepositsPage(){
    if(!d.error)setDeposits((d.data??[]) as Deposit[]);
   }catch(err){
    if(receiptPath)await supabase.storage.from("cash-deposit-receipts").remove([receiptPath]);
-   setError(err instanceof Error?err.message:"Could not create your transaction and deposit submission.");
+   const detail=err as {message?:string;details?:string;hint?:string;code?:string};
+   setError([detail?.message,detail?.details,detail?.hint,detail?.code?("Code: "+detail.code):null].filter(Boolean).join(" — ")||"Could not create your transaction and deposit submission.");
   }finally{setBusy(false);}
  }
  const statusLabel=(s:string)=>s==="verified"?"Verified by staff":s==="rejected"?"Rejected":s==="under_review"?"Under review":"Submitted";
