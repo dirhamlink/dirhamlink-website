@@ -391,8 +391,29 @@ export default function SendMoneyPage() {
                 <input value={ifsc} onChange={(event) => setIfsc(event.target.value.toUpperCase())} maxLength={20} autoComplete="off" placeholder="Enter IFSC or local routing code" required />
               </label>
               <label>
-                Bank branch name
-                <input value={bankBranch} onChange={(event) => setBankBranch(event.target.value)} maxLength={120} placeholder="Enter bank branch" required />
+                Search branch name or area
+                <input value={branchSearch} onChange={(event) => setBranchSearch(event.target.value)} maxLength={120} placeholder="Type branch, city or area" />
+              </label>
+              {branchOptions.length > 0 && <label>
+                Select branch
+                <select value={bankBranchCode + "|" + bankBranch} onChange={(event) => {
+                  const item = branchOptions.find((x) => (x.branch_code ?? "") + "|" + x.branch_name === event.target.value);
+                  if (item) {
+                    setBankBranch(item.branch_name);
+                    setBranchSearch(item.branch_name);
+                    setBankCity(item.city ?? item.district ?? "");
+                    setBankBranchCode(item.branch_code ?? "");
+                    if (item.ifsc) setIfsc(item.ifsc);
+                  }
+                }}>
+                  <option value="">Choose a listed branch</option>
+                  {branchOptions.filter((item) => (item.branch_name + " " + (item.city ?? "") + " " + (item.district ?? "")).toLowerCase().includes(branchSearch.toLowerCase())).map((item) => <option key={item.id} value={(item.branch_code ?? "") + "|" + item.branch_name}>{item.branch_name} — {item.city ?? item.district ?? "Location unavailable"}{item.branch_code ? " · " + item.branch_code : ""}</option>)}
+                </select>
+              </label>}
+              {branchDirectoryMessage && <p className="auth-disclaimer">{branchDirectoryMessage}</p>}
+              <label>
+                Branch code
+                <input value={bankBranchCode} onChange={(event) => setBankBranchCode(event.target.value)} maxLength={40} placeholder="Automatically filled when listed" />
               </label>
               <label>
                 Bank branch city
