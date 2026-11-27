@@ -15,6 +15,8 @@ const destinations = [
   { country: "Sri Lanka", currency: "LKR" },
 ];
 
+type SavedBeneficiary = { id:string; destination_country:string; recipient_full_name:string; payout_method:string; bank_name:string|null; account_name:string|null; account_number:string|null; ifsc:string|null; bank_branch:string|null; bank_city:string|null; upi_id:string|null };
+
 type RatesResponse = {
   rates?: Record<string, number>;
   customer_rates?: Record<string, number>;
@@ -27,6 +29,8 @@ type RatesResponse = {
 export default function SendMoneyPage() {
   const router = useRouter();
   const [userId, setUserId] = useState("");
+  const [beneficiaries, setBeneficiaries] = useState<SavedBeneficiary[]>([]);
+  const [selectedBeneficiaryId, setSelectedBeneficiaryId] = useState("");
   const [country, setCountry] = useState("India");
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
@@ -77,6 +81,17 @@ export default function SendMoneyPage() {
     void checkSession();
     return () => { active = false; };
   }, [router]);
+
+  useEffect(() => {
+    if (!userId) return;
+    let active = true;
+    async function loadBeneficiaries() {
+      const { data, error } = await supabase.from("beneficiaries").select("id,destination_country,recipient_full_name,payout_method,bank_name,account_name,account_number,ifsc,bank_branch,bank_city,upi_id").order("created_at", { ascending: false });
+      if (active && !error) setBeneficiaries((data ?? []) as SavedBeneficiary[]);
+    }
+    void loadBeneficiaries();
+    return () => { active = false; };
+  }, [userId]);
 
   useEffect(() => {
     let active = true;
@@ -301,6 +316,31 @@ export default function SendMoneyPage() {
               required
             />
           </label>
+
+          {beneficiaries.length > 0 && <label>
+            Use a saved beneficiary (optional)
+            <select value={selectedBeneficiaryId} onChange={(event) => {
+              const id = event.target.value;
+              setSelectedBeneficiaryId(id);
+              const saved = beneficiaries.find((item) => item.id === id);
+              if (saved) {
+                setCountry(saved.destination_country);
+                setRecipient(saved.recipient_full_name);
+                setPayout(saved.payout_method);
+                setBankName(saved.bank_name ?? "");
+                setAccountName(saved.account_name ?? "");
+                setAccountNumber(saved.account_number ?? "");
+                setIfsc(saved.ifsc ?? "");
+                setBankBranch(saved.bank_branch ?? "");
+                setBankCity(saved.bank_city ?? "");
+                setUpiId(saved.upi_id ?? "");
+              }
+            }}>
+              <option value="">Enter a new recipient</option>
+              {beneficiaries.map((item) => <option key={item.id} value={item.id}>{item.recipient_full_name} — {item.destination_country}</option>)}
+            </select>
+          </label>}
+          <p className="auth-disclaimer"><Link href="/beneficiaries">Manage saved beneficiaries</Link></p>
 
           <label>
             Recipient full name
