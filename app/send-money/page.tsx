@@ -29,10 +29,13 @@ export default function SendMoneyPage() {
   const [country, setCountry] = useState("India");
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
+  const [customerMobile, setCustomerMobile] = useState("");
   const [bankName, setBankName] = useState("");
   const [accountName, setAccountName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [ifsc, setIfsc] = useState("");
+  const [bankBranch, setBankBranch] = useState("");
+  const [bankCity, setBankCity] = useState("");
   const [upiId, setUpiId] = useState("");
   const [payout, setPayout] = useState("Bank transfer");
   const [funding, setFunding] = useState("Bank CDM deposit");
@@ -121,6 +124,10 @@ export default function SendMoneyPage() {
       setError("Enter an amount between AED 1 and AED 100,000.");
       return;
     }
+    if (!customerMobile.trim() || customerMobile.replace(/[\\s()+-]/g, "").length < 7) {
+      setError("Enter a valid mobile number with country code so our team can contact you.");
+      return;
+    }
     if (recipient.trim().length < 2) {
       setError("Enter the recipient's full name.");
       return;
@@ -134,7 +141,7 @@ export default function SendMoneyPage() {
         setError("Enter the recipient bank name, account holder name and account number.");
         return;
       }
-      if (country === "India" && !ifsc.trim()) {
+      if (!ifsc.trim()) {
         setError("Enter the recipient bank IFSC code.");
         return;
       }
@@ -150,10 +157,13 @@ export default function SendMoneyPage() {
           destination_currency: destination.currency,
           send_amount_aed: numericAmount,
           recipient_full_name: recipient.trim(),
+          customer_mobile: customerMobile.trim(),
           recipient_bank_name: bankName.trim() || null,
           recipient_bank_account_name: accountName.trim() || null,
           recipient_bank_account_number: accountNumber.trim() || null,
           recipient_bank_ifsc: ifsc.trim() || null,
+          recipient_bank_branch: bankBranch.trim() || null,
+          recipient_bank_city: bankCity.trim() || null,
           recipient_upi_id: upiId.trim() || null,
           payout_method: selectedPayout,
           funding_method: funding,
@@ -184,10 +194,13 @@ export default function SendMoneyPage() {
       );
       setAmount("");
       setRecipient("");
+      setCustomerMobile("");
       setBankName("");
       setAccountName("");
       setAccountNumber("");
       setIfsc("");
+      setBankBranch("");
+      setBankCity("");
       setUpiId("");
       setNote("");
     } catch (err) {
@@ -291,17 +304,17 @@ export default function SendMoneyPage() {
             <>
               <label>
                 Recipient bank name
-                <input value={bankName} onChange={(event) => setBankName(event.target.value)} maxLength={120} placeholder="e.g. State Bank of India" />
+                <input value={bankName} onChange={(event) => setBankName(event.target.value)} maxLength={120} placeholder="e.g. State Bank of India" required />
               </label>
               <label>
                 Bank account holder name
-                <input value={accountName} onChange={(event) => setAccountName(event.target.value)} maxLength={120} placeholder="Name exactly as shown by the bank" />
+                <input value={accountName} onChange={(event) => setAccountName(event.target.value)} maxLength={120} placeholder="Name exactly as shown by the bank" required />
               </label>
               {selectedPayout !== "UPI transfer" && (
                 <>
                   <label>
                     Recipient bank account number
-                    <input value={accountNumber} onChange={(event) => setAccountNumber(event.target.value)} maxLength={40} autoComplete="off" placeholder="Enter beneficiary account number" />
+                    <input value={accountNumber} onChange={(event) => setAccountNumber(event.target.value)} maxLength={40} autoComplete="off" placeholder="Enter beneficiary account number" required />
                   </label>
                   <label>
                     IFSC / bank routing code
@@ -312,7 +325,7 @@ export default function SendMoneyPage() {
               {country === "India" && (
                 <label>
                   Recipient UPI ID (if applicable)
-                  <input value={upiId} onChange={(event) => setUpiId(event.target.value)} maxLength={120} autoComplete="off" placeholder="name@bank" />
+                  <input value={upiId} onChange={(event) => setUpiId(event.target.value)} maxLength={120} autoComplete="off" placeholder="name@bank" required />
                 </label>
               )}
               <p className="auth-disclaimer">Beneficiary details are confidential and visible to the customer account and authorised DirhamLink team members under database access rules. Double-check every detail before submitting.</p>
