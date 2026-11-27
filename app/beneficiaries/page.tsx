@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
+import { DESTINATION_BANKS } from "../../lib/banks/destination-banks";
 
 type Beneficiary = {
  id:string; destination_country:string; recipient_full_name:string; payout_method:string;
@@ -77,7 +78,7 @@ export default function BeneficiariesPage(){
    <label>Recipient full name<input value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={120}/></label>
    <label>Payout method<select value={method} onChange={e=>setMethod(e.target.value)}><option>Bank account</option><option>Bank transfer</option><option>UPI transfer</option><option>Cash pickup</option></select></label>
    {["Bank account","Bank transfer"].includes(method)&&<>
-    <label>Bank name<input value={bank} onChange={e=>setBank(e.target.value)} required maxLength={120}/></label>
+    <label>Search bank name<input value={bank} onChange={e=>setBank(e.target.value)} required maxLength={120} list="beneficiary-bank-options" placeholder="Type to search bank name"/><datalist id="beneficiary-bank-options">{(DESTINATION_BANKS[country] ?? []).map(item=><option key={item} value={item}/>)}</datalist>{(country==="Nepal"||country==="Pakistan")&&<small>Select the bank name from the suggestions. Branch details are entered separately.</small>}</label>
     <label>Account holder name<input value={holder} onChange={e=>setHolder(e.target.value)} required maxLength={120}/></label>
     <label>Account number<input value={number} onChange={e=>setNumber(e.target.value)} required maxLength={40} autoComplete="off"/></label>
     <label>IFSC / routing code<input value={ifsc} onChange={e=>setIfsc(e.target.value.toUpperCase())} maxLength={20}/></label>
