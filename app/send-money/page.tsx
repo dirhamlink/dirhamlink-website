@@ -281,6 +281,20 @@ export default function SendMoneyPage() {
           </div>
 
           <label>
+            Your mobile number (with country code)
+            <input
+              type="tel"
+              inputMode="tel"
+              value={customerMobile}
+              onChange={(event) => setCustomerMobile(event.target.value)}
+              autoComplete="tel"
+              maxLength={25}
+              placeholder="e.g. +971 5X XXX XXXX"
+              required
+            />
+          </label>
+
+          <label>
             Recipient full name
             <input
               value={recipient}
