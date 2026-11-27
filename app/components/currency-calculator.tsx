@@ -15,6 +15,7 @@ export default function CurrencyCalculator() {
   const [amount, setAmount] = useState("1000");
   const [currency, setCurrency] = useState("INR");
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [customerRates, setCustomerRates] = useState<Record<string, number>>({});
   const [status, setStatus] = useState("Loading market rates…");
   useEffect(() => {
     let active = true;
@@ -25,6 +26,7 @@ export default function CurrencyCalculator() {
         if (!response.ok) throw new Error(data.error || "Rates unavailable");
         if (active) {
           setRates(data.rates || {});
+          setCustomerRates(data.customer_rates || data.rates || {});
           setStatus(data.delayed_minutes ? `Market data delayed by ${data.delayed_minutes} minutes` : "Live market reference");
         }
       } catch {
@@ -36,7 +38,8 @@ export default function CurrencyCalculator() {
     return () => { active = false; window.clearInterval(timer); };
   }, []);
   const selected = currencies.find((item) => item.code === currency) ?? currencies[0];
-  const rate = rates[currency];
+  const marketRate = rates[currency];
+  const rate = customerRates[currency] ?? marketRate;
   const estimate = useMemo(() => {
     const value = Number(amount);
     return Number.isFinite(value) && value > 0 && rate ? value * rate : 0;
@@ -52,10 +55,10 @@ export default function CurrencyCalculator() {
         </select>
       </div>
       <div className="calc-result">
-        <small>Estimated amount at market reference · {selected.code}</small>
+        <small>Estimated DirhamLink customer amount · {selected.code}</small>
         <strong>{rate ? estimate.toLocaleString("en-US", { maximumFractionDigits: 2 }) + " " + selected.code : "Rate unavailable"}</strong>
       </div>
-      <p className="disclaimer">{status}. This is an indicative market reference, not DirhamLink's approved customer selling quote. Final customer rate, fees and transfer eligibility must be confirmed separately.</p>
+      <p className="disclaimer">{status}. India includes INR 1 extra per AED over market reference where applicable. This is indicative only, not a confirmed executable quote. Final customer rate, fees and transfer eligibility must be confirmed separately.</p>
     </div>
   );
 }
