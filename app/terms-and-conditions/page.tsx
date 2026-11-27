@@ -35,7 +35,8 @@ export default function TermsAndConditionsPage() {
         <p>We aim to keep website information available and current, but do not guarantee uninterrupted access, error-free information or the availability of any exchange rate or transfer route. Website content may be updated when needed.</p>
 
         <h2>9. Support and complaints</h2>
-        <p>If a transfer is delayed or you have a question or complaint, contact the DirhamLink support team through the support contact details provided to you or the official channel through which your transaction was arranged. Include your transaction reference and never share your password or one-time security codes.</p>
+        <p>If a transfer is delayed or you have a question or complaint, contact our team member Arshdeep Singh using the official DirhamLink support contacts below. Include your transaction reference and never share your password or one-time security codes.</p>
+        <p><strong>Support contact — Arshdeep Singh</strong><br />Email: <a href="mailto:deepdxb2004@gmail.com">deepdxb2004@gmail.com</a><br />WhatsApp: <a href="https://wa.me/971541797541" target="_blank" rel="noreferrer">+971 54 179 7541</a></p>
 
         <h2>10. Changes and applicable requirements</h2>
         <p>These terms may be updated from time to time. Use of the website and any transfer service remains subject to applicable laws, regulatory requirements and the terms of the authorised service provider handling the transaction.</p>
