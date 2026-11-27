@@ -1,0 +1,13 @@
+{
+  "updatedAt": null,
+  "status": "not-configured",
+  "notice": "No live or approved exchange rates are configured. Do not publish indicative rates until verified rates are supplied by an authorised provider.",
+  "destinations": [
+    { "code": "INR", "country": "India", "flag": "🇮🇳", "rate": null, "enabled": true },
+    { "code": "PKR", "country": "Pakistan", "flag": "🇵🇰", "rate": null, "enabled": true },
+    { "code": "NPR", "country": "Nepal", "flag": "🇳🇵", "rate": null, "enabled": true },
+    { "code": "BDT", "country": "Bangladesh", "flag": "🇧🇩", "rate": null, "enabled": true },
+    { "code": "EGP", "country": "Egypt", "flag": "🇪🇬", "rate": null, "enabled": true },
+    { "code": "PHP", "country": "Philippines", "flag": "🇵🇭", "rate": null, "enabled": true }
+  ]
+}
