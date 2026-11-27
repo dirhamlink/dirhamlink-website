@@ -40,7 +40,7 @@ export default function TeamDepositsPage(){
  async function review(row:Deposit,status:"verified"|"rejected"){
   if(status==="verified"&&!window.confirm("Confirm only after independently checking the actual bank/CDM account records. A receipt image alone is not proof of funds. Verify this deposit?"))return;
   setBusy(row.id);setError("");
-  const {error}=await supabase.from("cash_deposit_submissions").update({status,staff_note:notes[row.id]?.trim()||null}).eq("id",row.id);
+  const {error}=await supabase.rpc("review_dirhamlink_cash_deposit",{p_deposit_id:row.id,p_status:status,p_staff_note:notes[row.id]?.trim()||null});
   if(error)setError(error.message);else setRows(old=>old.map(x=>x.id===row.id?{...x,status,staff_note:notes[row.id]?.trim()||null}:x));
   setBusy(null);
  }
