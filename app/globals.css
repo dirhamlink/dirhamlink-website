@@ -157,3 +157,31 @@ button, input, select { font: inherit; }
 .auth-form select:focus, .auth-form textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #1769e018; }
 
 .rate-status { margin-top: 14px; color: #68788e; font-size: 11px; line-height: 1.6; }
+
+
+/* Restricted DirhamLink team portal */
+.team-card { width: min(100%, 1050px); }
+.team-toolbar { display:flex; align-items:center; justify-content:space-between; gap:14px; margin:18px 0; }
+.team-toolbar > div { color:var(--navy); white-space:nowrap; }
+.team-toolbar small { color:var(--muted); }
+.team-toolbar input { width:min(100%, 390px); border:1px solid #d7e0eb; border-radius:10px; padding:12px 14px; }
+.team-list { display:grid; gap:15px; }
+.team-transaction { border:1px solid var(--line); border-radius:14px; padding:18px; background:#fff; min-width:0; }
+.team-transaction-head { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; }
+.team-transaction-head strong { display:block; color:var(--navy); font:800 16px Manrope; overflow-wrap:anywhere; }
+.team-transaction-head small { display:block; color:var(--muted); font-size:11px; margin-top:5px; }
+.team-status { flex:0 0 auto; background:#edf4ff; color:#174f9b; padding:6px 10px; border-radius:30px; font-size:11px; font-weight:800; }
+.team-metrics { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:16px 0; padding:14px; background:#f5f8fc; border-radius:11px; }
+.team-metrics small,.team-detail-grid small { display:block; color:var(--muted); font-size:11px; margin-bottom:5px; }
+.team-metrics strong { display:block; color:var(--navy); font:800 15px Manrope; overflow-wrap:anywhere; }
+.team-detail-grid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:13px; }
+.team-detail-grid strong { display:block; color:#263b56; font-size:13px; overflow-wrap:anywhere; word-break:break-word; }
+.team-id { font-size:10px !important; }
+.team-warning { margin:15px 0 0; padding:11px 12px; border-radius:9px; background:#fff8e8; color:#76551b; font-size:11px; line-height:1.6; }
+@media(max-width:640px) {
+  .team-toolbar { align-items:stretch; flex-direction:column; }
+  .team-toolbar input { width:100%; }
+  .team-metrics { grid-template-columns:1fr; }
+  .team-detail-grid { grid-template-columns:1fr; }
+  .team-transaction-head { flex-direction:column; }
+}
