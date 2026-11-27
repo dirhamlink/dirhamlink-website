@@ -124,7 +124,7 @@ export default function SendMoneyPage() {
       setError("Enter an amount between AED 1 and AED 100,000.");
       return;
     }
-    if (!customerMobile.trim() || customerMobile.replace(/[\\s()+-]/g, "").length < 7) {
+    if (!customerMobile.trim() || customerMobile.replace(/[\s()+-]/g, "").length < 7) {
       setError("Enter a valid mobile number with country code so our team can contact you.");
       return;
     }
@@ -300,7 +300,7 @@ export default function SendMoneyPage() {
             </select>
           </label>
 
-          {selectedPayout !== "Cash pickup" && (
+          {selectedPayout === "Bank transfer" || selectedPayout === "Bank account" ? (
             <>
               <label>
                 Recipient bank name
@@ -310,27 +310,30 @@ export default function SendMoneyPage() {
                 Bank account holder name
                 <input value={accountName} onChange={(event) => setAccountName(event.target.value)} maxLength={120} placeholder="Name exactly as shown by the bank" required />
               </label>
-              {selectedPayout !== "UPI transfer" && (
-                <>
-                  <label>
-                    Recipient bank account number
-                    <input value={accountNumber} onChange={(event) => setAccountNumber(event.target.value)} maxLength={40} autoComplete="off" placeholder="Enter beneficiary account number" required />
-                  </label>
-                  <label>
-                    IFSC / bank routing code
-                    <input value={ifsc} onChange={(event) => setIfsc(event.target.value.toUpperCase())} maxLength={20} autoComplete="off" placeholder="Enter IFSC or local routing code" />
-                  </label>
-                </>
-              )}
-              {country === "India" && (
-                <label>
-                  Recipient UPI ID (if applicable)
-                  <input value={upiId} onChange={(event) => setUpiId(event.target.value)} maxLength={120} autoComplete="off" placeholder="name@bank" required />
-                </label>
-              )}
-              <p className="auth-disclaimer">Beneficiary details are confidential and visible to the customer account and authorised DirhamLink team members under database access rules. Double-check every detail before submitting.</p>
+              <label>
+                Recipient bank account number
+                <input value={accountNumber} onChange={(event) => setAccountNumber(event.target.value)} maxLength={40} autoComplete="off" placeholder="Enter beneficiary account number" required />
+              </label>
+              <label>
+                IFSC / bank routing code
+                <input value={ifsc} onChange={(event) => setIfsc(event.target.value.toUpperCase())} maxLength={20} autoComplete="off" placeholder="Enter IFSC or local routing code" required />
+              </label>
+              <label>
+                Bank branch name
+                <input value={bankBranch} onChange={(event) => setBankBranch(event.target.value)} maxLength={120} placeholder="Enter bank branch" required />
+              </label>
+              <label>
+                Bank branch city
+                <input value={bankCity} onChange={(event) => setBankCity(event.target.value)} maxLength={100} placeholder="Enter city" required />
+              </label>
+              <p className="auth-disclaimer">Please check beneficiary details carefully. They are confidential and visible to the customer and authorised DirhamLink team members.</p>
             </>
-          )}
+          ) : selectedPayout === "UPI transfer" ? (
+            <label>
+              Recipient UPI ID
+              <input value={upiId} onChange={(event) => setUpiId(event.target.value)} maxLength={120} autoComplete="off" placeholder="name@bank" required />
+            </label>
+          ) : null}
 
           <label>
             Planned funding method
