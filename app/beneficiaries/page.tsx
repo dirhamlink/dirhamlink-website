@@ -11,7 +11,8 @@ type Beneficiary = {
  bank_name:string|null; account_name:string|null; account_number:string|null;
  ifsc:string|null; bank_branch:string|null; bank_city:string|null; bank_branch_code?:string|null; upi_id:string|null;
 };
-const countries=["India","Pakistan","Nepal","Bangladesh","Egypt","Philippines","Sri Lanka"];\ntype BranchOption={id:string;bank_name:string;city:string|null;district:string|null;branch_name:string;branch_code:string|null;ifsc:string|null};
+const countries=["India","Pakistan","Nepal","Bangladesh","Egypt","Philippines","Sri Lanka"];
+type BranchOption={id:string;bank_name:string;city:string|null;district:string|null;branch_name:string;branch_code:string|null;ifsc:string|null};
 export default function BeneficiariesPage(){
  const router=useRouter();
  const [rows,setRows]=useState<Beneficiary[]>([]);
@@ -24,7 +25,11 @@ export default function BeneficiariesPage(){
  const [number,setNumber]=useState("");
  const [ifsc,setIfsc]=useState("");
  const [branch,setBranch]=useState("");
- const [city,setCity]=useState("");\n const [branchOptions,setBranchOptions]=useState<BranchOption[]>([]);\n const [branchSearch,setBranchSearch]=useState("");\n const [branchDirectoryMessage,setBranchDirectoryMessage]=useState("");\n const [branchCode,setBranchCode]=useState("");
+ const [city,setCity]=useState("");
+ const [branchOptions,setBranchOptions]=useState<BranchOption[]>([]);
+ const [branchSearch,setBranchSearch]=useState("");
+ const [branchDirectoryMessage,setBranchDirectoryMessage]=useState("");
+ const [branchCode,setBranchCode]=useState("");
  const [upi,setUpi]=useState("");
  const [editing,setEditing]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
@@ -39,7 +44,20 @@ export default function BeneficiariesPage(){
   if(error)setError(error.message); else setRows((data??[]) as Beneficiary[]);
   setLoading(false);
  }
- useEffect(()=>{void load();},[]);\n useEffect(()=>{\n  let active=true;\n  async function loadBranches(){\n   setBranchOptions([]);setBranchDirectoryMessage("");\n   if(!bank.trim()||!["India","Nepal","Pakistan"].includes(country))return;\n   const {data,error}=await supabase.from("bank_branches").select("id,bank_name,city,district,branch_name,branch_code,ifsc").eq("country",country).eq("bank_name",bank.trim()).eq("is_active",true).order("city",{ascending:true}).limit(500);\n   if(!active)return;\n   if(error){setBranchDirectoryMessage("Branch directory is not available yet. Please enter branch and city manually.");return;}\n   setBranchOptions((data??[]) as BranchOption[]);\n   if(!data?.length)setBranchDirectoryMessage("No imported branch records for this bank yet. Please enter branch and city manually.");\n  }\n  void loadBranches();return()=>{active=false;};\n },[country,bank]);
+ useEffect(()=>{void load();},[]);
+ useEffect(()=>{
+  let active=true;
+  async function loadBranches(){
+   setBranchOptions([]);setBranchDirectoryMessage("");
+   if(!bank.trim()||!["India","Nepal","Pakistan"].includes(country))return;
+   const {data,error}=await supabase.from("bank_branches").select("id,bank_name,city,district,branch_name,branch_code,ifsc").eq("country",country).eq("bank_name",bank.trim()).eq("is_active",true).order("city",{ascending:true}).limit(500);
+   if(!active)return;
+   if(error){setBranchDirectoryMessage("Branch directory is not available yet. Please enter branch and city manually.");return;}
+   setBranchOptions((data??[]) as BranchOption[]);
+   if(!data?.length)setBranchDirectoryMessage("No imported branch records for this bank yet. Please enter branch and city manually.");
+  }
+  void loadBranches();return()=>{active=false;};
+ },[country,bank]);
  function reset(){
   setEditing(null);setName("");setBank("");setHolder("");setNumber("");setIfsc("");setBranch("");setCity("");setBranchCode("");setBranchSearch("");setUpi("");
  }
