@@ -5,22 +5,57 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
 
+type Transfer = {
+  id: string;
+  transaction_reference: string;
+  destination_country: string;
+  send_amount_aed: number;
+  status: string;
+  created_at: string;
+};
+
+const statusLabels: Record<string, string> = {
+  created: "Created",
+  under_review: "Under review",
+  awaiting_customer_contact: "Awaiting customer contact",
+  awaiting_verified_funds: "Awaiting verified funds",
+  funds_received_pending_checks: "Funds received — checks pending",
+  compliance_review: "Compliance review",
+  approved_for_processing: "Approved for processing",
+  processing_with_bank_or_partner: "Processing",
+  payout_confirmed: "Payout confirmed",
+  rejected: "Rejected",
+  cancelled: "Cancelled",
+};
+
 export default function AccountPage() {
   const router = useRouter();
   const [email, setEmail] = useState("");
+  const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [transferError, setTransferError] = useState("");
 
   useEffect(() => {
     let active = true;
-    supabase.auth.getUser().then(({ data, error }) => {
+    async function loadAccount() {
+      const { data, error } = await supabase.auth.getUser();
       if (!active) return;
       if (error || !data.user) {
         router.replace("/login");
         return;
       }
       setEmail(data.user.email ?? "");
+      const { data: rows, error: rowsError } = await supabase
+        .from("transfers")
+        .select("id, transaction_reference, destination_country, send_amount_aed, status, created_at")
+        .order("created_at", { ascending: false })
+        .limit(10);
+      if (!active) return;
+      if (rowsError) setTransferError("Run the latest database migration to enable transaction tracking.");
+      else setTransfers((rows ?? []) as Transfer[]);
       setLoading(false);
-    });
+    }
+    loadAccount();
     return () => { active = false; };
   }, [router]);
 
@@ -45,37 +80,43 @@ export default function AccountPage() {
           <Link className="dashboard-tile" href="/#calculator">
             <span className="dashboard-icon">↗</span>
             <strong>Exchange rates</strong>
-            <small>View indicative rates</small>
+            <small>View indicative market reference rates</small>
             <span className="dashboard-action">View rates</span>
           </Link>
-          <div className="dashboard-tile dashboard-disabled">
+          <Link className="dashboard-tile" href="/send-money">
             <span className="dashboard-icon">＋</span>
-            <strong>Send money</strong>
-            <small>Transfer requests are being built</small>
-            <span className="dashboard-coming">Coming soon</span>
-          </div>
+            <strong>Start a transfer</strong>
+            <small>Create a transaction and receive a reference</small>
+            <span className="dashboard-action">Start now</span>
+          </Link>
           <div className="dashboard-tile dashboard-disabled">
             <span className="dashboard-icon">▤</span>
             <strong>Beneficiaries</strong>
-            <small>Manage people you send money to</small>
-            <span className="dashboard-coming">Coming soon</span>
+            <small>Saved recipients will be added in the next stage</small>
+            <span className="dashboard-coming">In development</span>
           </div>
           <div className="dashboard-tile dashboard-disabled">
             <span className="dashboard-icon">▣</span>
             <strong>Cash deposits</strong>
-            <small>Submit deposit details and receipts</small>
-            <span className="dashboard-coming">Coming soon</span>
-          </div>
-          <div className="dashboard-tile dashboard-disabled">
-            <span className="dashboard-icon">⌕</span>
-            <strong>Track transfers</strong>
-            <small>Follow your transfer progress</small>
-            <span className="dashboard-coming">Coming soon</span>
+            <small>Deposit verification workflow is being built</small>
+            <span className="dashboard-coming">In development</span>
           </div>
         </div>
 
+        <div className="dashboard-section-title">Your transactions</div>
+        {transferError && <div className="account-notice">{transferError}</div>}
+        {!transferError && transfers.length === 0 && (
+          <div className="account-notice">You have no transactions yet. Select “Start a transfer” to create your first transaction.</div>
+        )}
+        {transfers.map(transfer => (
+          <div className="dashboard-tile" key={transfer.id} style={{ marginBottom: 10 }}>
+            <strong>{transfer.transaction_reference}</strong>
+            <small>{transfer.destination_country} · AED {Number(transfer.send_amount_aed).toFixed(2)} · {new Date(transfer.created_at).toLocaleString()}</small>
+            <span className="dashboard-action">{statusLabels[transfer.status] || transfer.status}</span>
+          </div>
+        ))}
         <div className="account-notice">
-          Your customer login is working. The services marked “Coming soon” are not active yet. No payment or money transfer can be made through this dashboard at this stage.
+          Transaction creation and customer tracking are being activated. Cash receipt, compliance approval and payout confirmation must be completed through verified, authorised operational processes. No deposit should be made until DirhamLink issues approved instructions.
         </div>
         <button className="btn btn-primary auth-submit" onClick={signOut}>Log out</button>
         <Link className="auth-home" href="/">Back to homepage</Link>
