@@ -4,6 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
+import { DESTINATION_BANKS } from "../../lib/banks/destination-banks";
 
 const destinations = [
   { country: "India", currency: "INR" },
@@ -366,7 +367,7 @@ export default function SendMoneyPage() {
             <>
               <label>
                 Recipient bank name
-                <input value={bankName} onChange={(event) => setBankName(event.target.value)} maxLength={120} placeholder="e.g. State Bank of India" required />
+                <input value={bankName} onChange={(event) => setBankName(event.target.value)} maxLength={120} placeholder="Search bank name" list="transfer-bank-options" required />\n                <datalist id="transfer-bank-options">{(DESTINATION_BANKS[country] ?? []).map((item) => <option key={item} value={item} />)}</datalist>
               </label>
               <label>
                 Bank account holder name
@@ -388,7 +389,7 @@ export default function SendMoneyPage() {
                 Bank branch city
                 <input value={bankCity} onChange={(event) => setBankCity(event.target.value)} maxLength={100} placeholder="Enter city" required />
               </label>
-              <p className="auth-disclaimer">Please check beneficiary details carefully. They are confidential and visible to the customer and authorised DirhamLink team members.</p>
+              {(country === "Nepal" || country === "Pakistan") && <p className="auth-disclaimer">Search and select your bank name from the suggestions. Enter the branch and city exactly as shown by your bank. Bank account and branch details are not independently verified.</p>}\n              <p className="auth-disclaimer">Please check beneficiary details carefully. They are confidential and visible to the customer and authorised DirhamLink team members.</p>
             </>
           ) : selectedPayout === "UPI transfer" ? (
             <label>
