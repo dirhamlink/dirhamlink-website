@@ -1,5 +1,9 @@
 -- One-step cash deposit flow: create a transfer for the customer's saved beneficiary
 -- and its pending deposit record atomically. Apply after 202611280002.
+alter table public.transfers drop constraint if exists transfers_funding_method_check;
+alter table public.transfers add constraint transfers_funding_method_check
+ check (funding_method in ('Bank CDM deposit','Bank branch cash deposit','Office cash deposit','Cash pickup arrangement'));
+
 create or replace function public.create_transfer_from_cash_deposit(
  p_beneficiary_id uuid,
  p_amount_aed numeric,
@@ -13,10 +17,6 @@ language plpgsql
 security definer
 set search_path = public
 as $$
-alter table public.transfers drop constraint if exists transfers_funding_method_check;
-alter table public.transfers add constraint transfers_funding_method_check
- check (funding_method in ('Bank CDM deposit','Bank branch cash deposit','Office cash deposit','Cash pickup arrangement'));
-
 declare
  v_b public.beneficiaries%rowtype;
  v_transfer_id uuid;
