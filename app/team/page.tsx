@@ -51,8 +51,7 @@ export default function TeamPortalPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
-  const [updatingId, setUpdatingId] = useState("");
-  const [actionMessage, setActionMessage] = useState("");
+  const [clockNow, setClockNow] = useState(Date.now());
 
   useEffect(() => {
     let active = true;
@@ -89,29 +88,17 @@ export default function TeamPortalPage() {
     return () => { active = false; };
   }, [router]);
 
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
+
   const filtered = rows.filter((row) => {
     const q = search.trim().toLowerCase();
     return !q || [
       row.transaction_reference, row.destination_country, row.recipient_full_name, row.status,
     ].some((value) => value?.toLowerCase().includes(q));
   });
-
-  async function markCompleted(row: TeamTransfer) {
-    setActionMessage("");
-    const confirmed = window.confirm(`Only continue if the payout for ${row.transaction_reference} has actually reached the recipient and has been independently verified. Confirming will mark it as Payout confirmed and generate an internal DirhamLink tracking reference.`);
-    if (!confirmed) return;
-    setUpdatingId(row.id);
-    const { data: completionReference, error: updateError } = await supabase.rpc("mark_dirhamlink_transfer_completed", {
-      p_transfer_id: row.id,
-    });
-    if (updateError) {
-      setActionMessage("Could not mark transaction completed: " + updateError.message);
-    } else {
-      setRows((current) => current.map((item) => item.id === row.id ? { ...item, status: "payout_confirmed", completion_reference: completionReference as string } : item));
-      setActionMessage(`${row.transaction_reference} completed. DirhamLink virtual completion reference: ${completionReference}.`);
-    }
-    setUpdatingId("");
-  }
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -162,15 +149,15 @@ export default function TeamPortalPage() {
                   <div><small>Bank city</small><strong>{row.recipient_bank_city || "Not provided"}</strong></div>
                   <div><small>Customer ID</small><strong className="team-id">{row.customer_id}</strong></div>
                 </div>
-                <p className="team-warning">Reference rate is indicative only. Verify the actual incoming payment, complete compliance checks, and independently confirm that the recipient has received the payout before marking this transaction completed.</p>
-                {row.status !== "payout_confirmed" && row.status !== "rejected" && row.status !== "cancelled" && <button className="btn btn-primary auth-submit" type="button" disabled={updatingId === row.id} onClick={() => void markCompleted(row)}>{updatingId === row.id ? "Updating…" : "Mark transaction completed"}</button>}
+                <p className="team-warning">Reference rate is indicative only. The 5-hour countdown is a target from submission, not proof that funds have been received or paid out.</p>
+                {row.status !== "payout_confirmed" && row.status !== "rejected" && row.status !== "cancelled" && <div className="account-notice"><strong>5-hour target: </strong>{Math.max(0, 5 * 60 * 60 * 1000 - (clockNow - new Date(row.created_at).getTime())) > 0 ? (() => { const ms = Math.max(0, 5 * 60 * 60 * 1000 - (clockNow - new Date(row.created_at).getTime())); const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); const s = Math.floor((ms % 60000) / 1000); return `${h}h ${m}m ${s}s remaining`; })() : "Target window elapsed — follow up with the payout partner."}</div>}
+
                 {row.status === "payout_confirmed" && <p className="auth-success">Payout confirmed</p>}
               </article>;
             })}
           </div>
         </>}
-        {actionMessage && <div className="account-notice" role="status">{actionMessage}</div>}
-        <div className="account-notice">The completion button records a staff confirmation only. It does not send money or verify a bank transfer automatically. Use it only after the payout has actually been completed and independently verified. Each action is audit-logged and receives an automatically generated internal completion reference.</div>
+        <div className="account-notice">The countdown is an estimated service target only. Transfers must still pass funding, compliance and payout checks. A transaction is marked payout-confirmed only after an authorised payout system supplies verified confirmation.</div>
         <button className="btn btn-outline auth-submit" onClick={signOut}>Log out</button>
         <Link className="auth-home" href="/account">Customer account</Link>
       </section>
