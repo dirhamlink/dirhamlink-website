@@ -125,13 +125,19 @@ export default function SendMoneyPage() {
       setError("Enter the recipient's full name.");
       return;
     }
-    if (selectedPayout !== "Cash pickup" && !accountNumber.trim() && !upiId.trim()) {
-      setError("Enter the recipient bank account number or UPI ID before continuing.");
-      return;
-    }
     if (selectedPayout === "UPI transfer" && !upiId.trim()) {
       setError("Enter the recipient UPI ID.");
       return;
+    }
+    if (selectedPayout !== "Cash pickup" && selectedPayout !== "UPI transfer") {
+      if (!bankName.trim() || !accountName.trim() || !accountNumber.trim()) {
+        setError("Enter the recipient bank name, account holder name and account number.");
+        return;
+      }
+      if (country === "India" && !ifsc.trim()) {
+        setError("Enter the recipient bank IFSC code.");
+        return;
+      }
     }
 
     setLoading(true);
