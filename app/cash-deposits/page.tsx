@@ -7,7 +7,7 @@ import { supabase } from "../../lib/supabase/client";
 
 type Transfer={id:string;transaction_reference:string;send_amount_aed:number;status:string};
 type Deposit={id:string;transfer_id:string;amount_aed:number;deposit_method:string;deposit_date:string;status:string;created_at:string;bank_reference:string|null;staff_note:string|null};
-const bankDetails={bank:"Emirates NBD PJSC",iban:"AE850260000999511277701",account:"099951277701",currency:"AED",swift:"EBILAEAD",branch:"Al Barsha 2 Branch, Dubai"};
+const bankDetails={bank:"Emirates NBD PJSC",iban:"AE850260000999511277701",account:"0999511277701",currency:"AED",swift:"EBILAEAD",branch:"Al Barsha 2 Branch, Dubai"};
 export default function CashDepositsPage(){
  const router=useRouter();
  const [transfers,setTransfers]=useState<Transfer[]>([]);
@@ -60,7 +60,7 @@ export default function CashDepositsPage(){
   <Link className="brand auth-brand" href="/account"><span className="brand-mark">D</span>DirhamLink</Link>
   <p className="eyebrow auth-eyebrow">Funding and receipt verification</p><h1>Cash deposits</h1>
   <p className="auth-intro">Use these authorised AED account details only after your transfer has been reviewed and DirhamLink staff has instructed you to deposit.</p>
-  <div className="account-notice"><strong>Deposit account — {bankDetails.bank}</strong><br/>Account name: DirhamLink<br/>IBAN: {bankDetails.iban}<br/>Account number: {bankDetails.account}<br/>Currency: {bankDetails.currency}<br/>SWIFT: {bankDetails.swift}<br/>Branch: {bankDetails.branch}<br/><strong>Accepted methods:</strong> CDM cash deposit and bank branch cash deposit.</div>
+  <div className="account-notice"><strong>Deposit account — {bankDetails.bank}</strong><br/>IBAN: {bankDetails.iban}<br/>Account number: {bankDetails.account}<br/>Currency: {bankDetails.currency}<br/>SWIFT: {bankDetails.swift}<br/>Branch: {bankDetails.branch}<br/><strong>Accepted methods:</strong> CDM cash deposit and bank branch cash deposit.</div>
   <div className="account-notice">Do not deposit before receiving approval for your specific transaction. Never rely on a receipt image alone as proof of funds. DirhamLink staff must independently verify the deposit in the account or bank records.</div>
   <form className="auth-form" onSubmit={submit}>
    <label>Transaction<select value={transferId} onChange={e=>setTransferId(e.target.value)} required><option value="">Select a transaction</option>{transfers.filter(t=>!["payout_confirmed","rejected","cancelled"].includes(t.status)).map(t=><option key={t.id} value={t.id}>{t.transaction_reference} — AED {Number(t.send_amount_aed).toFixed(2)} ({t.status})</option>)}</select></label>
