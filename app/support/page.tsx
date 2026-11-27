@@ -35,6 +35,8 @@ export default function SupportPage() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
+  const [mobileSaving, setMobileSaving] = useState(false);
+  const [mobileMessage, setMobileMessage] = useState("");
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [selectedTransfer, setSelectedTransfer] = useState("");
   const [issue, setIssue] = useState(issueTypes[0]);
@@ -78,6 +80,18 @@ export default function SupportPage() {
     return () => { active = false; };
   }, [router]);
 
+  async function saveMobile() {
+    setMobileMessage("");
+    if (!/^5\\d{8}$/.test(mobile)) { setMobileMessage("Enter exactly 9 UAE mobile digits, starting with 5."); return; }
+    setMobileSaving(true);
+    const { data, error } = await supabase.auth.getUser();
+    if (error || !data.user) { setMobileMessage("Please log in again to update your mobile number."); setMobileSaving(false); return; }
+    const { error: updateError } = await supabase.auth.updateUser({ data: { ...data.user.user_metadata, phone: "+971" + mobile, mobile: "+971" + mobile } });
+    if (updateError) setMobileMessage(updateError.message);
+    else setMobileMessage("Mobile number saved to your account.");
+    setMobileSaving(false);
+  }
+
   const chosenTransfer = useMemo(
     () => transfers.find(row => row.id === selectedTransfer),
     [transfers, selectedTransfer]
@@ -91,7 +105,7 @@ export default function SupportPage() {
     "",
     "Customer account details:",
     "Name: " + (name || "Not available in account profile"),
-    "Mobile: " + (mobile || "Not available in account profile or transfer record"),
+    "Mobile: " + (mobile ? "+971" + mobile : "Not available in account profile or transfer record"),
     "Email: " + (email || "Not available"),
     "",
     "Transfer details:",
@@ -103,7 +117,8 @@ export default function SupportPage() {
           "Recipient: " + chosenTransfer.recipient_full_name,
           "Current status: " + chosenTransfer.status,
           "Created: " + new Date(chosenTransfer.created_at).toLocaleString(),
-        ].join("\n")
+        ].join("
+")
       : "No transfer selected / inquiry only",
     "",
     "Customer's explanation:",
@@ -112,7 +127,8 @@ export default function SupportPage() {
     "Please review the details, contact me using the account information above, and advise on the appropriate resolution. Any transaction or beneficiary changes must be verified and approved by authorised DirhamLink staff.",
     "",
     "Thank you.",
-  ].join("\n"), [issue, name, mobile, email, chosenTransfer, details]);
+  ].join("
+"), [issue, name, mobile, email, chosenTransfer, details]);
 
   function sendEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,7 +136,12 @@ export default function SupportPage() {
     window.location.href = "mailto:" + supportEmail + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(message);
   }
 
-  const chatMessage = "Hello DirhamLink Support Team, I need help.\nName: " + name + "\nMobile: " + mobile + "\nEmail: " + email + (chosenTransfer ? "\nTransfer: " + chosenTransfer.transaction_reference : "") + "\nIssue: " + issue;
+  const chatMessage = "Hello DirhamLink Support Team, I need help.
+Name: " + name + "
+Mobile: " + mobile + "
+Email: " + email + (chosenTransfer ? "
+Transfer: " + chosenTransfer.transaction_reference : "") + "
+Issue: " + issue;
   const chatUrl = "https://wa.me/" + whatsappNumber + "?text=" + encodeURIComponent(chatMessage);
 
   if (loading) return <main className="auth-page"><section className="auth-card">Loading your support details…</section></main>;
@@ -135,7 +156,10 @@ export default function SupportPage() {
         <div className="account-notice">
           <strong>Your account details</strong>
           <p>Name: {name || "Not available"}</p>
-          <p>Mobile: {mobile || "Not available — add it to your profile or a transfer"}</p>
+          <p>Mobile: {mobile ? "+971" + mobile : "Not added yet"}</p>
+          <label>UAE mobile number<div className="mobile-input-row"><span className="mobile-prefix">+971</span><input type="tel" inputMode="numeric" value={mobile} onChange={event => setMobile(event.target.value.replace(/\\D/g, "").slice(0, 9))} maxLength={9} minLength={9} pattern="5[0-9]{8}" placeholder="5XXXXXXXX"/></div><small>Enter 9 digits only, starting with 5. +971 is added automatically.</small></label>
+          <button className="btn btn-outline auth-submit" type="button" onClick={() => void saveMobile()} disabled={mobileSaving}>{mobileSaving ? "Saving…" : "Save mobile number"}</button>
+          {mobileMessage && <p className="auth-disclaimer" role="status">{mobileMessage}</p>}
           <p>Email: {email || "Not available"}</p>
         </div>
         <form className="auth-form" onSubmit={sendEmail}>
