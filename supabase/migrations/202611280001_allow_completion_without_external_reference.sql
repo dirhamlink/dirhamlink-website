@@ -1,9 +1,45 @@
--- DirhamLink: allow staff to confirm an independently verified payout without typing
--- an external bank reference. The internal completion reference remains auto-generated.
--- This does not initiate a payout or independently verify receipt of funds.
+-- DirhamLink: create/repair the payout audit table and allow staff to confirm
+-- an independently verified payout without typing an external bank reference.
+-- This records a staff attestation; it does not initiate or independently verify payout.
+
+alter table public.transfers
+  add column if not exists completion_reference text;
+
+create unique index if not exists transfers_completion_reference_unique
+  on public.transfers (completion_reference)
+  where completion_reference is not null;
+
+create table if not exists public.transfer_status_events (
+  id uuid primary key default gen_random_uuid(),
+  transfer_id uuid not null references public.transfers(id) on delete restrict,
+  previous_status text not null,
+  new_status text not null,
+  confirmation_reference text,
+  completion_reference text,
+  changed_by uuid not null references auth.users(id) on delete restrict,
+  changed_at timestamptz not null default now()
+);
+
+alter table public.transfer_status_events
+  add column if not exists completion_reference text;
 
 alter table public.transfer_status_events
   alter column confirmation_reference drop not null;
+
+create unique index if not exists transfer_status_events_completion_reference_unique
+  on public.transfer_status_events (completion_reference)
+  where completion_reference is not null;
+
+alter table public.transfer_status_events enable row level security;
+
+drop policy if exists "Active team can view transfer status audit"
+  on public.transfer_status_events;
+
+create policy "Active team can view transfer status audit"
+on public.transfer_status_events for select to authenticated
+using (public.is_active_dirhamlink_team_member());
+
+grant select on public.transfer_status_events to authenticated;
 
 drop function if exists public.mark_dirhamlink_transfer_completed(uuid, text);
 
@@ -41,7 +77,8 @@ begin
     raise exception 'This transaction is already in a final state.';
   end if;
 
-  v_completion_reference := 'DL-CMP-' || upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 12));
+  v_completion_reference := 'DL-CMP-' ||
+    upper(substr(replace(gen_random_uuid()::text, '-', ''), 1, 12));
 
   update public.transfers
   set status = 'payout_confirmed',
