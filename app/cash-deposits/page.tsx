@@ -58,7 +58,7 @@ export default function CashDepositsPage(){
    });
    if(rpcError)throw rpcError;
    const created=Array.isArray(data)?data[0]:data;
-   if(!created?.transfer_id||!created?.transaction_reference)throw new Error("The system did not return a transaction reference. Please contact support before submitting again.");
+   if(!created?.transfer_id||!created?.created_transaction_reference)throw new Error("The system did not return a transaction reference. Please contact support before submitting again.");
    const selected=beneficiaries.find(b=>b.id===beneficiaryId);
    setSuccess("Transaction "+created.transaction_reference+" has been created for "+(selected?.recipient_full_name??"your beneficiary")+". Your deposit evidence is pending staff verification. No payout has been initiated.");
    setAmount("");setReference("");setNote("");setFile(null);
