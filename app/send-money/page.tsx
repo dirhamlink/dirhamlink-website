@@ -243,7 +243,7 @@ export default function SendMoneyPage() {
           Create and track your transfer on DirhamLink. Your transaction receives a unique reference when it is saved.
         </p>
         <div className="account-notice">
-          Need help? Contact Arshdeep Singh (DirhamLink team) at <a href="mailto:deepdxb2004@gmail.com">deepdxb2004@gmail.com</a> or WhatsApp <a href="https://wa.me/971541797541" target="_blank" rel="noreferrer">+971 54 179 7541</a>. Include your transaction reference when asking about a transfer.
+          Need help? <a href="/support">Contact our support team</a> or use the <a href="https://wa.me/971541797541?text=Hello%20DirhamLink%20Support%2C%20I%20need%20assistance." target="_blank" rel="noreferrer">Chat With Us</a> option. Include your transaction reference when asking about a transfer.
         </div>
         <div className="account-notice">
           Transaction records are available online. Creating a record does not lock an exchange rate, confirm receipt of funds, approve compliance, or send money. The 5-hour period is an estimated service target, not a guarantee. If the transfer is not credited to the recipient’s bank account within the stated timeframe, contact our support team with your transaction reference. Wait for verified instructions from DirhamLink before depositing cash.
@@ -426,7 +426,7 @@ export default function SendMoneyPage() {
         </form>
 
         <p className="auth-disclaimer">
-          Do not deposit money until DirhamLink has verified your transaction and issued approved instructions. Uploading a receipt alone is not proof that funds have been received. Payout is not yet automated. If the recipient’s bank account has not been credited within the stated timeframe, contact Arshdeep Singh at deepdxb2004@gmail.com or WhatsApp +971 54 179 7541 with your transaction reference.
+          Do not deposit money until DirhamLink has verified your transaction and issued approved instructions. Uploading a receipt alone is not proof that funds have been received. Payout is not yet automated. If the recipient’s bank account has not been credited within the stated timeframe, contact our support team through the Support page or Chat With Us with your transaction reference.
         </p>
         <Link className="auth-home" href="/account">← Back to dashboard</Link>
       </section>
