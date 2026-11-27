@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
@@ -20,7 +20,6 @@ type RatesResponse = {
   source?: string;
   timestamp?: number | null;
   data_updated_at?: number | string | null;
-  delayed_minutes?: number;
   error?: string;
 };
 
@@ -41,21 +40,31 @@ export default function SendMoneyPage() {
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  const destination = destinations.find(item => item.country === country) ?? destinations[0];
-  const payoutOptions = country === "India"
-    ? ["Bank transfer", "UPI transfer", "Cash pickup"]
-    : ["Bank account", "Cash pickup"];
+  const destination = destinations.find((item) => item.country === country) ?? destinations[0];
+  const payoutOptions = useMemo(
+    () => country === "India"
+      ? ["Bank transfer", "UPI transfer", "Cash pickup"]
+      : ["Bank account", "Cash pickup"],
+    [country]
+  );
+  const selectedPayout = payoutOptions.includes(payout) ? payout : payoutOptions[0];
   const numericAmount = Number(amount);
   const referenceRate = rates[destination.currency];
-  const estimatedPayout = Number.isFinite(numericAmount) && numericAmount > 0 && referenceRate
-    ? numericAmount * referenceRate
-    : null;
+  const estimatedPayout =
+    Number.isFinite(numericAmount) && numericAmount > 0 && referenceRate
+      ? numericAmount * referenceRate
+      : null;
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data, error: authError }) => {
+    let active = true;
+    async function checkSession() {
+      const { data, error: authError } = await supabase.auth.getUser();
+      if (!active) return;
       if (authError || !data.user) router.replace("/login");
       else setUserId(data.user.id);
-    });
+    }
+    void checkSession();
+    return () => { active = false; };
   }, [router]);
 
   useEffect(() => {
@@ -64,99 +73,222 @@ export default function SendMoneyPage() {
       try {
         const response = await fetch("/api/rates", { cache: "no-store" });
         const data = await response.json() as RatesResponse;
-        if (!response.ok || !data.rates) throw new Error(data.error || "Rates are temporarily unavailable.");
-        if (active) {
-          setRates(data.rates);
-          setRateSource(data.source || "Market reference provider");
-          const rawUpdatedAt = data.data_updated_at ?? data.timestamp ?? null;
-          const parsedUpdatedAt = typeof rawUpdatedAt === "number"
-            ? rawUpdatedAt
-            : rawUpdatedAt ? Date.parse(rawUpdatedAt) / 1000 : null;
-          setRateUpdatedAt(parsedUpdatedAt && Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : null);
-          setRateError("");
+        if (!response.ok || !data.rates) {
+          throw new Error(data.error || "Rates are temporarily unavailable.");
         }
+        if (!active) return;
+        setRates(data.rates);
+        setRateSource(data.source || "Market reference provider");
+        const rawUpdatedAt = data.data_updated_at ?? data.timestamp ?? null;
+        const parsedUpdatedAt = typeof rawUpdatedAt === "number"
+          ? rawUpdatedAt
+          : rawUpdatedAt ? Date.parse(rawUpdatedAt) / 1000 : null;
+        setRateUpdatedAt(
+          parsedUpdatedAt !== null && Number.isFinite(parsedUpdatedAt)
+            ? parsedUpdatedAt
+            : null
+        );
+        setRateError("");
       } catch (err) {
-        if (active) setRateError(err instanceof Error ? err.message : "Rates are temporarily unavailable.");
+        if (active) {
+          setRateError(err instanceof Error ? err.message : "Rates are temporarily unavailable.");
+        }
       }
     }
-    loadRates();
+    void loadRates();
     const timer = window.setInterval(loadRates, 60000);
-    return () => { active = false; window.clearInterval(timer); };
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
   }, []);
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setSuccess("");
-    if (!userId) return setError("Please log in again and try once more.");
-    if (!Number.isFinite(numericAmount) || numericAmount < 1 || numericAmount > 100000) {
-      return setError("Enter an amount between AED 1 and AED 100,000.");
-    }
-    setLoading(true);
-    const { data, error: insertError } = await supabase.from("transfers").insert({
-      customer_id: userId,
-      destination_country: country,
-      destination_currency: destination.currency,
-      send_amount_aed: numericAmount,
-      recipient_full_name: recipient.trim(),
-      payout_method: payout,
-      funding_method: funding,
-      reference_rate: referenceRate ?? null,
-      rate_source: referenceRate ? rateSource : null,
-      rate_captured_at: referenceRate ? new Date().toISOString() : null,
-      customer_note: note.trim() || null,
-    }).select("id, transaction_reference, status").single();
-    setLoading(false);
-    if (insertError) {
-      console.error("DirhamLink transfer insert failed:", insertError);
-      setError("Transaction could not be created: " + insertError.message);
+
+    if (!userId) {
+      setError("Your login session is not ready. Please log in again.");
       return;
     }
-    setSuccess("Your transaction record has been created. Reference: " + data.transaction_reference + ". Status: Created. DirhamLink staff must review it and confirm the final customer rate and authorised funding instructions before any payment is made.");
-    setAmount("");
-    setRecipient("");
-    setNote("");
+    if (!Number.isFinite(numericAmount) || numericAmount < 1 || numericAmount > 100000) {
+      setError("Enter an amount between AED 1 and AED 100,000.");
+      return;
+    }
+    if (recipient.trim().length < 2) {
+      setError("Enter the recipient's full name.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data, error: insertError } = await supabase
+        .from("transfers")
+        .insert({
+          customer_id: userId,
+          destination_country: country,
+          destination_currency: destination.currency,
+          send_amount_aed: numericAmount,
+          recipient_full_name: recipient.trim(),
+          payout_method: selectedPayout,
+          funding_method: funding,
+          reference_rate: referenceRate ?? null,
+          rate_source: referenceRate ? rateSource : null,
+          rate_captured_at: referenceRate ? new Date().toISOString() : null,
+          customer_note: note.trim() || null,
+        })
+        .select("id, transaction_reference, status")
+        .single();
+
+      if (insertError) {
+        console.error("DirhamLink transfer insert failed:", insertError);
+        setError("Transaction could not be created: " + insertError.message);
+        return;
+      }
+      if (!data) {
+        setError("The database did not return a transaction reference. Please try again.");
+        return;
+      }
+
+      setSuccess(
+        "Your transaction record has been created. Reference: " +
+        data.transaction_reference +
+        ". Status: " +
+        data.status +
+        ". DirhamLink staff must review it and confirm the final customer rate and authorised funding instructions before any payment is made."
+      );
+      setAmount("");
+      setRecipient("");
+      setNote("");
+    } catch (err) {
+      console.error("Unexpected DirhamLink transaction error:", err);
+      setError(err instanceof Error ? err.message : "An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <main className="auth-page">
       <section className="auth-card dashboard-card">
-        <Link className="brand auth-brand" href="/account"><span className="brand-mark">D</span>DirhamLink</Link>
+        <Link className="brand auth-brand" href="/account">
+          <span className="brand-mark">D</span>DirhamLink
+        </Link>
         <p className="eyebrow auth-eyebrow">Customer transfers</p>
         <h1>Start a transfer</h1>
-        <p className="auth-intro">Create and track your transfer on DirhamLink. Your transaction receives a unique reference as soon as it is created.</p>
-        <div className="account-notice">Transaction creation is live. This does not itself lock an exchange rate, confirm receipt of funds, approve compliance, or send money. Wait for verified instructions from DirhamLink before depositing cash.</div>
+        <p className="auth-intro">
+          Create and track your transfer on DirhamLink. Your transaction receives a unique reference when it is saved.
+        </p>
+        <div className="account-notice">
+          Transaction records are available online. Creating a record does not lock an exchange rate, confirm receipt of funds, approve compliance, or send money. Wait for verified instructions from DirhamLink before depositing cash.
+        </div>
+
         <form className="auth-form" onSubmit={submit}>
-          <label>Destination country
-            <select value={country} onChange={e => setCountry(e.target.value)}>{destinations.map(item => <option key={item.country} value={item.country}>{item.country} ({item.currency})</option>)}</select>
+          <label>
+            Destination country
+            <select
+              value={country}
+              onChange={(event) => {
+                const nextCountry = event.target.value;
+                setCountry(nextCountry);
+                setPayout(nextCountry === "India" ? "Bank transfer" : "Bank account");
+              }}
+            >
+              {destinations.map((item) => (
+                <option key={item.country} value={item.country}>
+                  {item.country} ({item.currency})
+                </option>
+              ))}
+            </select>
           </label>
-          <label>Amount to send (AED)
-            <input type="number" inputMode="decimal" min="1" max="100000" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 1000" required />
+
+          <label>
+            Amount to send (AED)
+            <input
+              type="number"
+              inputMode="decimal"
+              min="1"
+              max="100000"
+              step="0.01"
+              value={amount}
+              onChange={(event) => setAmount(event.target.value)}
+              placeholder="e.g. 1000"
+              required
+            />
           </label>
+
           <div className="calc-result">
             <small>Indicative market reference estimate</small>
-            <strong>{estimatedPayout !== null ? estimatedPayout.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " " + destination.currency : "Rate unavailable"}</strong>
-            <small>{referenceRate ? "1 AED = " + referenceRate + " " + destination.currency : rateError || "Waiting for the rate provider."}</small>
+            <strong>
+              {estimatedPayout !== null
+                ? estimatedPayout.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " " + destination.currency
+                : "Rate unavailable"}
+            </strong>
+            <small>
+              {referenceRate
+                ? "1 AED = " + referenceRate + " " + destination.currency
+                : rateError || "Waiting for the rate provider."}
+            </small>
             <small>Not a confirmed DirhamLink selling rate. Final rate and fees require staff confirmation.</small>
-            {rateUpdatedAt && <small>Provider: {rateSource || "Market reference"} · Updated: {new Date(rateUpdatedAt * 1000).toLocaleString()}</small>}
+            {rateUpdatedAt !== null && (
+              <small>
+                Provider: {rateSource || "Market reference"} · Updated: {new Date(rateUpdatedAt * 1000).toLocaleString()}
+              </small>
+            )}
           </div>
-          <label>Recipient full name
-            <input value={recipient} onChange={e => setRecipient(e.target.value)} minLength={2} maxLength={120} autoComplete="name" placeholder="Name of the person receiving money" required />
+
+          <label>
+            Recipient full name
+            <input
+              value={recipient}
+              onChange={(event) => setRecipient(event.target.value)}
+              minLength={2}
+              maxLength={120}
+              autoComplete="name"
+              placeholder="Name of the person receiving money"
+              required
+            />
           </label>
-          <label>How should the recipient receive the money?
-            <select value={payoutOptions.includes(payout) ? payout : payoutOptions[0]} onChange={e => setPayout(e.target.value)}>{payoutOptions.map(option => <option key={option}>{option}</option>)}</select>
+
+          <label>
+            How should the recipient receive the money?
+            <select value={selectedPayout} onChange={(event) => setPayout(event.target.value)}>
+              {payoutOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+            </select>
           </label>
-          <label>Planned funding method
-            <select value={funding} onChange={e => setFunding(e.target.value)}><option>Bank CDM deposit</option><option>Office cash deposit</option><option>Cash pickup arrangement</option></select>
+
+          <label>
+            Planned funding method
+            <select value={funding} onChange={(event) => setFunding(event.target.value)}>
+              <option>Bank CDM deposit</option>
+              <option>Office cash deposit</option>
+              <option>Cash pickup arrangement</option>
+            </select>
           </label>
-          <label>Additional note (optional)
-            <textarea value={note} onChange={e => setNote(e.target.value)} maxLength={500} rows={3} placeholder="Anything our team should know?" />
+
+          <label>
+            Additional note (optional)
+            <textarea
+              value={note}
+              onChange={(event) => setNote(event.target.value)}
+              maxLength={500}
+              rows={3}
+              placeholder="Anything our team should know?"
+            />
           </label>
+
           {error && <p className="auth-error" role="alert">{error}</p>}
           {success && <p className="auth-success" role="status">{success}</p>}
-          <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>{loading ? "Creating transaction…" : "Create transaction"}</button>
+
+          <button className="btn btn-primary auth-submit" type="submit" disabled={loading || !userId}>
+            {loading ? "Creating transaction…" : !userId ? "Checking login…" : "Create transaction"}
+          </button>
         </form>
-        <p className="auth-disclaimer">Do not deposit money until DirhamLink staff have verified your transaction and issued approved instructions. Uploading a receipt alone is not proof that funds have been received. Payout is not yet automated.</p>
+
+        <p className="auth-disclaimer">
+          Do not deposit money until DirhamLink staff have verified your transaction and issued approved instructions. Uploading a receipt alone is not proof that funds have been received. Payout is not yet automated.
+        </p>
         <Link className="auth-home" href="/account">← Back to dashboard</Link>
       </section>
     </main>
