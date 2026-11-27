@@ -49,13 +49,13 @@ export default function LiveRateBoard() {
     <>
       <div className="rate-grid">
         {countries.map((country) => (
-          <article className="rate-card" key={country.code}>
+          <a className="rate-card rate-card-link" key={country.code} href={`/destinations/${country.name.toLowerCase()}`} aria-label={`Explore ${country.name}`}>
             <div className="country-top"><span className="flag">{country.flag}</span>{country.name}</div>
             <div className="currency">1 AED to {country.code}</div>
             <div className="rate-value">{data?.rates?.[country.code] ? data.rates[country.code].toFixed(4) : "—"}</div>
             <div className="rate-note">{error ? "Rate temporarily unavailable" : data ? "Market reference" : "Loading rate…"}</div>
             {country.code === "INR" && data?.customer_rates?.INR && <><div className="rate-value">{data.customer_rates.INR.toFixed(4)}</div><div className="rate-note">DirhamLink customer rate · +1 INR per AED</div></>}
-          </article>
+          </a>
         ))}
       </div>
       <div className="rate-status" aria-live="polite">
