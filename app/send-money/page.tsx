@@ -16,7 +16,8 @@ const destinations = [
   { country: "Sri Lanka", currency: "LKR" },
 ];
 
-type SavedBeneficiary = { id:string; destination_country:string; recipient_full_name:string; payout_method:string; bank_name:string|null; account_name:string|null; account_number:string|null; ifsc:string|null; bank_branch:string|null; bank_city:string|null; bank_branch_code?:string|null; upi_id:string|null };\ntype BranchOption={id:string;bank_name:string;city:string|null;district:string|null;branch_name:string;branch_code:string|null;ifsc:string|null};
+type SavedBeneficiary = { id:string; destination_country:string; recipient_full_name:string; payout_method:string; bank_name:string|null; account_name:string|null; account_number:string|null; ifsc:string|null; bank_branch:string|null; bank_city:string|null; bank_branch_code?:string|null; upi_id:string|null };
+type BranchOption={id:string;bank_name:string;city:string|null;district:string|null;branch_name:string;branch_code:string|null;ifsc:string|null};
 
 type RatesResponse = {
   rates?: Record<string, number>;
@@ -41,7 +42,11 @@ export default function SendMoneyPage() {
   const [accountNumber, setAccountNumber] = useState("");
   const [ifsc, setIfsc] = useState("");
   const [bankBranch, setBankBranch] = useState("");
-  const [bankCity, setBankCity] = useState("");\n  const [bankBranchCode,setBankBranchCode]=useState("");\n  const [branchOptions,setBranchOptions]=useState<BranchOption[]>([]);\n  const [branchSearch,setBranchSearch]=useState("");\n  const [branchDirectoryMessage,setBranchDirectoryMessage]=useState("");
+  const [bankCity, setBankCity] = useState("");
+  const [bankBranchCode,setBankBranchCode]=useState("");
+  const [branchOptions,setBranchOptions]=useState<BranchOption[]>([]);
+  const [branchSearch,setBranchSearch]=useState("");
+  const [branchDirectoryMessage,setBranchDirectoryMessage]=useState("");
   const [upiId, setUpiId] = useState("");
   const [payout, setPayout] = useState("Bank transfer");
   const [funding, setFunding] = useState("Bank CDM deposit");
@@ -183,7 +188,8 @@ export default function SendMoneyPage() {
           recipient_bank_account_number: accountNumber.trim() || null,
           recipient_bank_ifsc: ifsc.trim() || null,
           recipient_bank_branch: bankBranch.trim() || null,
-          recipient_bank_city: bankCity.trim() || null,\n          recipient_bank_branch_code: bankBranchCode.trim() || null,
+          recipient_bank_city: bankCity.trim() || null,
+          recipient_bank_branch_code: bankBranchCode.trim() || null,
           recipient_upi_id: upiId.trim() || null,
           payout_method: selectedPayout,
           funding_method: funding,
@@ -333,7 +339,9 @@ export default function SendMoneyPage() {
                 setAccountNumber(saved.account_number ?? "");
                 setIfsc(saved.ifsc ?? "");
                 setBankBranch(saved.bank_branch ?? "");
-                setBankCity(saved.bank_city ?? "");\n                setBankBranchCode(saved.bank_branch_code ?? "");\n                setBranchSearch(saved.bank_branch ?? "");
+                setBankCity(saved.bank_city ?? "");
+                setBankBranchCode(saved.bank_branch_code ?? "");
+                setBranchSearch(saved.bank_branch ?? "");
                 setUpiId(saved.upi_id ?? "");
               }
             }}>
