@@ -34,6 +34,9 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
     try {
       if (isRegister) {
+        const localMobile = mobile.replace(/\\D/g, "");
+        if (!/^5\\d{8}$/.test(localMobile)) throw new Error("Enter exactly 9 UAE mobile digits, starting with 5.");
+        const fullMobile = "+971" + localMobile;
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
