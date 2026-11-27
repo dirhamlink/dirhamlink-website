@@ -117,8 +117,7 @@ export default function SupportPage() {
           "Recipient: " + chosenTransfer.recipient_full_name,
           "Current status: " + chosenTransfer.status,
           "Created: " + new Date(chosenTransfer.created_at).toLocaleString(),
-        ].join("
-")
+        ].join("\n")
       : "No transfer selected / inquiry only",
     "",
     "Customer's explanation:",
@@ -136,12 +135,14 @@ export default function SupportPage() {
     window.location.href = "mailto:" + supportEmail + "?subject=" + encodeURIComponent(subject) + "&body=" + encodeURIComponent(message);
   }
 
-  const chatMessage = "Hello DirhamLink Support Team, I need help.
-Name: " + name + "
-Mobile: " + mobile + "
-Email: " + email + (chosenTransfer ? "
-Transfer: " + chosenTransfer.transaction_reference : "") + "
-Issue: " + issue;
+  const chatMessage = [
+    "Hello DirhamLink Support Team, I need help.",
+    "Name: " + name,
+    "Mobile: " + mobile,
+    "Email: " + email,
+    ...(chosenTransfer ? ["Transfer: " + chosenTransfer.transaction_reference] : []),
+    "Issue: " + issue,
+  ].join("\n");
   const chatUrl = "https://wa.me/" + whatsappNumber + "?text=" + encodeURIComponent(chatMessage);
 
   if (loading) return <main className="auth-page"><section className="auth-card">Loading your support details…</section></main>;
