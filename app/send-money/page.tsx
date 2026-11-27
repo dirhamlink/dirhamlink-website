@@ -137,8 +137,8 @@ export default function SendMoneyPage() {
       return;
     }
     if (selectedPayout !== "Cash pickup" && selectedPayout !== "UPI transfer") {
-      if (!bankName.trim() || !accountName.trim() || !accountNumber.trim()) {
-        setError("Enter the recipient bank name, account holder name and account number.");
+      if (!bankName.trim() || !accountName.trim() || !accountNumber.trim() || !bankBranch.trim() || !bankCity.trim()) {
+        setError("Enter the recipient bank name, account holder name, account number, branch and city.");
         return;
       }
       if (!ifsc.trim()) {
