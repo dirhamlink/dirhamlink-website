@@ -11,7 +11,8 @@ type Beneficiary = {
  bank_name:string|null; account_name:string|null; account_number:string|null;
  ifsc:string|null; bank_branch:string|null; bank_city:string|null; bank_branch_code?:string|null; upi_id:string|null; recipient_mobile?:string|null; recipient_wallet_number?:string|null;
 };
-const countries=["India","Pakistan","Nepal","Bangladesh","Egypt","Philippines","Sri Lanka"];\nconst payoutOptionsByCountry:Record<string,string[]>={India:["Bank transfer","UPI transfer","Wallet: Paytm Wallet","Cash pickup"],Pakistan:["Bank transfer","Wallet: Easypaisa","Wallet: JazzCash","Cash pickup"],Nepal:["Bank transfer","Wallet: eSewa","Wallet: Khalti","Cash pickup"],Bangladesh:["Bank transfer","Wallet: bKash","Wallet: Nagad","Wallet: Rocket","Cash pickup"],Egypt:["Bank transfer","Wallet: Vodafone Cash","Wallet: Orange Cash","Wallet: Etisalat Cash","Cash pickup"],Philippines:["Bank transfer","Wallet: GCash","Wallet: Maya","Cash pickup"],"Sri Lanka":["Bank transfer","Wallet: eZ Cash","Wallet: mCash","Cash pickup"]};
+const countries=["India","Pakistan","Nepal","Bangladesh","Egypt","Philippines","Sri Lanka"];
+const payoutOptionsByCountry:Record<string,string[]>={India:["Bank transfer","UPI transfer","Wallet: Paytm Wallet","Cash pickup"],Pakistan:["Bank transfer","Wallet: Easypaisa","Wallet: JazzCash","Cash pickup"],Nepal:["Bank transfer","Wallet: eSewa","Wallet: Khalti","Cash pickup"],Bangladesh:["Bank transfer","Wallet: bKash","Wallet: Nagad","Wallet: Rocket","Cash pickup"],Egypt:["Bank transfer","Wallet: Vodafone Cash","Wallet: Orange Cash","Wallet: Etisalat Cash","Cash pickup"],Philippines:["Bank transfer","Wallet: GCash","Wallet: Maya","Cash pickup"],"Sri Lanka":["Bank transfer","Wallet: eZ Cash","Wallet: mCash","Cash pickup"]};
 type BranchOption={id:string;bank_name:string;city:string|null;district:string|null;branch_name:string;branch_code:string|null;ifsc:string|null};
 export default function BeneficiariesPage(){
  const router=useRouter();
@@ -31,7 +32,11 @@ export default function BeneficiariesPage(){
  const [branchSearch,setBranchSearch]=useState("");
  const [branchDirectoryMessage,setBranchDirectoryMessage]=useState("");
  const [branchCode,setBranchCode]=useState("");
- const [upi,setUpi]=useState("");\n const [walletNumber,setWalletNumber]=useState("");\n const payoutOptions=payoutOptionsByCountry[country]??["Bank transfer","Cash pickup"];\n const selectedMethod=payoutOptions.includes(method)?method:payoutOptions[0];\n const isWalletMethod=selectedMethod.startsWith("Wallet:");
+ const [upi,setUpi]=useState("");
+ const [walletNumber,setWalletNumber]=useState("");
+ const payoutOptions=payoutOptionsByCountry[country]??["Bank transfer","Cash pickup"];
+ const selectedMethod=payoutOptions.includes(method)?method:payoutOptions[0];
+ const isWalletMethod=selectedMethod.startsWith("Wallet:");
  const [editing,setEditing]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
  const [saving,setSaving]=useState(false);
@@ -71,7 +76,8 @@ export default function BeneficiariesPage(){
   e.preventDefault();setError("");setSuccess("");
   if(!userId)return;
   if(recipientMobile && !/^5\d{8}$/.test(recipientMobile)){setError("Enter exactly 9 UAE mobile digits for the beneficiary, starting with 5. +971 is added automatically.");return;}
-  if(isWalletMethod&&!walletNumber.trim()){setError("Enter the recipient mobile wallet number.");return;}\n  if(selectedMethod==="UPI transfer"&&!upi.trim()){setError("Enter the recipient UPI ID.");return;}
+  if(isWalletMethod&&!walletNumber.trim()){setError("Enter the recipient mobile wallet number.");return;}
+  if(selectedMethod==="UPI transfer"&&!upi.trim()){setError("Enter the recipient UPI ID.");return;}
   if(["Bank account","Bank transfer"].includes(selectedMethod)&&(!bank.trim()||!holder.trim()||!number.trim())){setError("Enter bank name, account holder and account number.");return;}
   setSaving(true);
   const payload={customer_id:userId,destination_country:country,recipient_full_name:name.trim(),recipient_mobile:recipientMobile?"+971"+recipientMobile:null,payout_method:selectedMethod,
@@ -97,7 +103,9 @@ export default function BeneficiariesPage(){
    <label>Destination country<select value={country} onChange={e=>setCountry(e.target.value)}>{countries.map(c=><option key={c}>{c}</option>)}</select></label>
    <label>Recipient full name<input value={name} onChange={e=>setName(e.target.value)} required minLength={2} maxLength={120}/></label>
    <label>Beneficiary mobile number<div className="mobile-input-row"><span className="mobile-prefix">+971</span><input type="tel" inputMode="numeric" autoComplete="tel-national" value={recipientMobile} onChange={e=>setRecipientMobile(e.target.value.replace(/\D/g,"").slice(0,9))} maxLength={9} minLength={9} pattern="5[0-9]{8}" placeholder="5XXXXXXXX"/></div><small>Enter 9 digits only. UAE country code +971 is added automatically. Leave blank if not required.</small></label>
-   <label>Payout method<select value={selectedMethod} onChange={e=>setMethod(e.target.value)}>{payoutOptions.map(option=><option key={option} value={option}>{option.startsWith("Wallet:")?"📱 "+option.replace("Wallet: ",""):option==="Cash pickup"?"💵 Cash pickup":option==="UPI transfer"?"📲 UPI transfer":"🏦 "+option}</option>)}</select></label>\n   <p className="auth-disclaimer">Payout preferences only. Provider availability, recipient eligibility, fees and final currency require confirmation by DirhamLink staff.</p>\n   {isWalletMethod&&<label>📱 {selectedMethod.replace("Wallet: ","")} mobile wallet number<input value={walletNumber} onChange={e=>setWalletNumber(e.target.value)} required maxLength={40} autoComplete="off" placeholder="Enter wallet-registered mobile number"/></label>}
+   <label>Payout method<select value={selectedMethod} onChange={e=>setMethod(e.target.value)}>{payoutOptions.map(option=><option key={option} value={option}>{option.startsWith("Wallet:")?"📱 "+option.replace("Wallet: ",""):option==="Cash pickup"?"💵 Cash pickup":option==="UPI transfer"?"📲 UPI transfer":"🏦 "+option}</option>)}</select></label>
+   <p className="auth-disclaimer">Payout preferences only. Provider availability, recipient eligibility, fees and final currency require confirmation by DirhamLink staff.</p>
+   {isWalletMethod&&<label>📱 {selectedMethod.replace("Wallet: ","")} mobile wallet number<input value={walletNumber} onChange={e=>setWalletNumber(e.target.value)} required maxLength={40} autoComplete="off" placeholder="Enter wallet-registered mobile number"/></label>}
    {["Bank account","Bank transfer"].includes(method)&&<>
     <label>Search or enter bank name<input value={bank} onChange={e=>{setBank(e.target.value);setBranch("");setBranchCode("");setIfsc("");}} required maxLength={120} list="beneficiary-bank-options" placeholder="Search or type bank name manually"/><datalist id="beneficiary-bank-options">{(DESTINATION_BANKS[country] ?? []).map(item=><option key={item} value={item}/>)}</datalist><small>{country==="India"?"If your Indian bank is not shown in the suggestions, type its full bank name manually. Enter the IFSC and branch details below.": "If your bank is not listed, type its full name manually. Enter the branch details below."}</small></label>
     <label>Account holder name<input value={holder} onChange={e=>setHolder(e.target.value)} required maxLength={120}/></label>
@@ -117,7 +125,8 @@ export default function BeneficiariesPage(){
   <div className="dashboard-section-title">Your saved recipients</div>
   {loading?<div className="account-notice">Loading beneficiaries…</div>:rows.length===0?<div className="account-notice">No saved beneficiaries yet.</div>:rows.map(row=><article className="dashboard-tile" key={row.id} style={{marginBottom:10}}>
    <strong>{row.recipient_full_name}</strong><small>{row.destination_country} · {row.payout_method}</small>
-   {row.recipient_mobile&&<small>Mobile: {row.recipient_mobile}</small>}\n   {row.recipient_wallet_number&&<small>Wallet number: {row.recipient_wallet_number}</small>}
+   {row.recipient_mobile&&<small>Mobile: {row.recipient_mobile}</small>}
+   {row.recipient_wallet_number&&<small>Wallet number: {row.recipient_wallet_number}</small>}
    <small>{row.bank_name||row.upi_id||"Cash pickup"}{row.account_number?" · Account ending "+row.account_number.slice(-4):""}</small>
    <div style={{display:"flex",gap:8,marginTop:12}}><button className="btn btn-outline" type="button" onClick={()=>edit(row)}>Edit</button><button className="btn btn-outline" type="button" onClick={()=>void remove(row.id)}>Delete</button></div>
   </article>)}
