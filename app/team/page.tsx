@@ -8,6 +8,7 @@ import { supabase } from "../../lib/supabase/client";
 type TeamTransfer = {
   id: string;
   transaction_reference: string;
+  completion_reference: string | null;
   customer_id: string;
   customer_mobile: string | null;
   destination_country: string;
@@ -76,7 +77,7 @@ export default function TeamPortalPage() {
       }
       const { data, error: rowsError } = await supabase
         .from("transfers")
-        .select("id, transaction_reference, customer_id, destination_country, destination_currency, send_amount_aed, recipient_full_name, payout_method, funding_method, reference_rate, rate_source, status, created_at, recipient_bank_name, recipient_bank_account_name, recipient_bank_account_number, recipient_bank_ifsc, recipient_bank_branch, recipient_bank_city, recipient_upi_id, customer_mobile")
+        .select("id, transaction_reference, completion_reference, customer_id, destination_country, destination_currency, send_amount_aed, recipient_full_name, payout_method, funding_method, reference_rate, rate_source, status, created_at, recipient_bank_name, recipient_bank_account_name, recipient_bank_account_number, recipient_bank_ifsc, recipient_bank_branch, recipient_bank_city, recipient_upi_id, customer_mobile")
         .order("created_at", { ascending: false })
         .limit(200);
       if (!active) return;
@@ -108,15 +109,15 @@ export default function TeamPortalPage() {
     const confirmed = window.confirm(`Confirm that payout for ${row.transaction_reference} has actually reached the recipient? This will mark the transaction as Payout confirmed.`);
     if (!confirmed) return;
     setUpdatingId(row.id);
-    const { error: updateError } = await supabase.rpc("mark_dirhamlink_transfer_completed", {
+    const { data: completionReference, error: updateError } = await supabase.rpc("mark_dirhamlink_transfer_completed", {
       p_transfer_id: row.id,
       p_confirmation_reference: confirmationReference.trim(),
     });
     if (updateError) {
       setActionMessage("Could not mark transaction completed: " + updateError.message);
     } else {
-      setRows((current) => current.map((item) => item.id === row.id ? { ...item, status: "payout_confirmed" } : item));
-      setActionMessage(`${row.transaction_reference} marked as payout confirmed. The action was recorded in the audit log.`);
+      setRows((current) => current.map((item) => item.id === row.id ? { ...item, status: "payout_confirmed", completion_reference: completionReference as string } : item));
+      setActionMessage(`${row.transaction_reference} completed. DirhamLink virtual completion reference: ${completionReference}.`);
     }
     setUpdatingId("");
   }
@@ -150,7 +151,8 @@ export default function TeamPortalPage() {
                   <span className="team-status">{statusNames[row.status] || row.status}</span>
                 </div>
                 <div className="team-metrics">
-                  <div><small>Send amount</small><strong>AED {Number(row.send_amount_aed).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</strong></div>
+                  {row.completion_reference && <div className="team-completion-reference"><small>DirhamLink virtual completion reference</small><strong>{row.completion_reference}</strong></div>}
+                <div><small>Send amount</small><strong>AED {Number(row.send_amount_aed).toLocaleString(undefined, {minimumFractionDigits:2, maximumFractionDigits:2})}</strong></div>
                   <div><small>Destination</small><strong>{row.destination_country} ({row.destination_currency})</strong></div>
                   <div><small>Indicative estimate</small><strong>{estimate === null ? "Not available" : estimate.toLocaleString(undefined, {maximumFractionDigits:2}) + " " + row.destination_currency}</strong></div>
                 </div>
