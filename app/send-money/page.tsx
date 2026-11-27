@@ -86,7 +86,7 @@ export default function SendMoneyPage() {
     if (!userId) return;
     let active = true;
     async function loadBeneficiaries() {
-      const { data, error } = await supabase.from("beneficiaries").select("id,destination_country,recipient_full_name,payout_method,bank_name,account_name,account_number,ifsc,bank_branch,bank_city,upi_id").order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("beneficiaries").select("id,destination_country,recipient_full_name,payout_method,bank_name,account_name,account_number,ifsc,bank_branch,bank_city,upi_id").eq("customer_id", userId).order("created_at", { ascending: false });
       if (active && !error) setBeneficiaries((data ?? []) as SavedBeneficiary[]);
     }
     void loadBeneficiaries();
