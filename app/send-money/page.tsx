@@ -92,12 +92,34 @@ export default function SendMoneyPage() {
     if (!userId) return;
     let active = true;
     async function loadBeneficiaries() {
-      const { data, error } = await supabase.from("beneficiaries").select("id,destination_country,recipient_full_name,payout_method,bank_name,account_name,account_number,ifsc,bank_branch,bank_city,upi_id").eq("customer_id", userId).order("created_at", { ascending: false });
+      const { data, error } = await supabase.from("beneficiaries").select("id,destination_country,recipient_full_name,payout_method,bank_name,account_name,account_number,ifsc,bank_branch,bank_city,bank_branch_code,upi_id").eq("customer_id", userId).order("created_at", { ascending: false });
       if (active && !error) setBeneficiaries((data ?? []) as SavedBeneficiary[]);
     }
     void loadBeneficiaries();
     return () => { active = false; };
   }, [userId]);
+
+  useEffect(() => {
+    let active = true;
+    async function loadBranches() {
+      setBranchOptions([]);
+      setBranchDirectoryMessage("");
+      if (!bankName.trim() || !["India", "Nepal", "Pakistan"].includes(country)) return;
+      const { data, error } = await supabase.from("bank_branches")
+        .select("id,bank_name,city,district,branch_name,branch_code,ifsc")
+        .eq("country", country).eq("bank_name", bankName.trim())
+        .eq("is_active", true).order("city", { ascending: true }).limit(500);
+      if (!active) return;
+      if (error) {
+        setBranchDirectoryMessage("Branch directory is not available yet. Please enter branch and city manually.");
+        return;
+      }
+      setBranchOptions((data ?? []) as BranchOption[]);
+      if (!data?.length) setBranchDirectoryMessage("No imported branch records for this bank yet. Please enter branch and city manually.");
+    }
+    void loadBranches();
+    return () => { active = false; };
+  }, [country, bankName]);
 
   useEffect(() => {
     let active = true;
