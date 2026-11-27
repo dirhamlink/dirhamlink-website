@@ -123,7 +123,7 @@ export default function AccountPage() {
           </div>
         ))}
         <div className="account-notice">
-          The 5-hour countdown is an estimated service target from submission, not a guarantee or proof of payout. Cash receipt, compliance approval and payout confirmation still require verified, authorised operational processes. No deposit should be made until DirhamLink issues approved instructions.
+          The 5-hour countdown is an estimated service target from submission, not a guarantee or proof of payout. If the transfer has not been successfully credited to the recipient’s bank account within the stated timeframe, please contact our support team and provide your transaction reference so we can check its status. Cash receipt, compliance approval and payout confirmation still require verified, authorised operational processes. Do not make a deposit until DirhamLink issues approved instructions.
         </div>
         <button className="btn btn-primary auth-submit" onClick={signOut}>Log out</button>
         <Link className="auth-home" href="/">Back to homepage</Link>
