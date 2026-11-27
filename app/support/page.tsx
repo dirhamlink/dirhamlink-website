@@ -2,7 +2,7 @@
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
 
 type Transfer = {
@@ -32,7 +32,6 @@ const issueTypes = [
 
 export default function SupportPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [mobile, setMobile] = useState("");
@@ -66,7 +65,7 @@ export default function SupportPage() {
       if (!transferError && data) {
         const rows = data as Transfer[];
         setTransfers(rows);
-        const requested = searchParams.get("transfer");
+        const requested = new URLSearchParams(window.location.search).get("transfer");
         const initial = rows.find(row => row.id === requested) ?? rows[0];
         if (initial) {
           setSelectedTransfer(initial.id);
@@ -77,7 +76,7 @@ export default function SupportPage() {
     }
     void load();
     return () => { active = false; };
-  }, [router, searchParams]);
+  }, [router]);
 
   const chosenTransfer = useMemo(
     () => transfers.find(row => row.id === selectedTransfer),
