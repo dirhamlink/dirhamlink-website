@@ -10,6 +10,7 @@ type AuthFormProps = { mode: "login" | "register" };
 export default function AuthForm({ mode }: AuthFormProps) {
   const router = useRouter();
   const [name, setName] = useState("");
+  const [mobile, setMobile] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
@@ -36,7 +37,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
-          options: { data: { full_name: name }, emailRedirectTo: `${window.location.origin}/auth/callback` },
+          options: { data: { full_name: name, phone: mobile }, emailRedirectTo: `${window.location.origin}/auth/callback` },
         });
         if (signUpError) throw signUpError;
         if (data.session) {
@@ -69,6 +70,11 @@ export default function AuthForm({ mode }: AuthFormProps) {
           {isRegister && (
             <label>Full name
               <input autoComplete="name" value={name} onChange={(e) => setName(e.target.value)} required maxLength={100} />
+            </label>
+          )}
+          {isRegister && (
+            <label>Mobile number (with country code)
+              <input type="tel" autoComplete="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} required maxLength={25} placeholder="+971 5X XXX XXXX" />
             </label>
           )}
           <label>Email address
