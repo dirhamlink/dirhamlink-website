@@ -97,36 +97,39 @@ export default function SupportPage() {
     [transfers, selectedTransfer]
   );
 
-  const message = useMemo(() => [
-    "Hello DirhamLink Support Team,",
-    "",
-    "I need assistance with the following issue:",
-    "Issue category: " + issue,
-    "",
-    "Customer account details:",
-    "Name: " + (name || "Not available in account profile"),
-    "Mobile: " + (mobile ? "+971" + mobile : "Not available in account profile or transfer record"),
-    "Email: " + (email || "Not available"),
-    "",
-    "Transfer details:",
-    chosenTransfer
-      ? [
-          "Transaction reference: " + chosenTransfer.transaction_reference,
-          "Destination: " + chosenTransfer.destination_country + " (" + chosenTransfer.destination_currency + ")",
-          "Send amount: AED " + Number(chosenTransfer.send_amount_aed).toFixed(2),
-          "Recipient: " + chosenTransfer.recipient_full_name,
-          "Current status: " + chosenTransfer.status,
-          "Created: " + new Date(chosenTransfer.created_at).toLocaleString(),
-        ].join("\n")
-      : "No transfer selected / inquiry only",
-    "",
-    "Customer's explanation:",
-    details.trim() || "Please contact me to discuss this issue.",
-    "",
-    "Please review the details, contact me using the account information above, and advise on the appropriate resolution. Any transaction or beneficiary changes must be verified and approved by authorised DirhamLink staff.",
-    "",
-    "Thank you.",
-  ].join("\n"), [issue, name, mobile, email, chosenTransfer, details]);
+  const message = useMemo(() => {
+    const messageLines = [
+      "Hello DirhamLink Support Team,",
+      "",
+      "I need assistance with the following issue:",
+      "Issue category: " + issue,
+      "",
+      "Customer account details:",
+      "Name: " + (name || "Not available in account profile"),
+      "Mobile: " + (mobile ? "+971" + mobile : "Not available in account profile or transfer record"),
+      "Email: " + (email || "Not available"),
+      "",
+      "Transfer details:",
+      chosenTransfer
+        ? [
+            "Transaction reference: " + chosenTransfer.transaction_reference,
+            "Destination: " + chosenTransfer.destination_country + " (" + chosenTransfer.destination_currency + ")",
+            "Send amount: AED " + Number(chosenTransfer.send_amount_aed).toFixed(2),
+            "Recipient: " + chosenTransfer.recipient_full_name,
+            "Current status: " + chosenTransfer.status,
+            "Created: " + new Date(chosenTransfer.created_at).toLocaleString(),
+          ].join("\\n")
+        : "No transfer selected / inquiry only",
+      "",
+      "Customer's explanation:",
+      details.trim() || "Please contact me to discuss this issue.",
+      "",
+      "Please review the details, contact me using the account information above, and advise on the appropriate resolution. Any transaction or beneficiary changes must be verified and approved by authorised DirhamLink staff.",
+      "",
+      "Thank you.",
+    ];
+    return messageLines.join("\\n");
+  }, [issue, name, mobile, email, chosenTransfer, details]);
 
   function sendEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
