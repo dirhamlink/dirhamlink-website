@@ -36,7 +36,7 @@ export default function AuthForm({ mode }: AuthFormProps) {
       if (isRegister) {
         const localMobile = mobile.replace(/\D/g, "");
         if (!/^5\d{8}$/.test(localMobile)) throw new Error("Enter exactly 9 UAE mobile digits, starting with 5.");
-        const fullMobile = "+971" + localMobile;
+        const fullMobile: string = "+971" + localMobile;
         const { data, error: signUpError } = await supabase.auth.signUp({
           email,
           password,
@@ -76,8 +76,22 @@ export default function AuthForm({ mode }: AuthFormProps) {
             </label>
           )}
           {isRegister && (
-            <label>Mobile number (with country code)
-              <input type="tel" autoComplete="tel" value={mobile} onChange={(e) => setMobile(e.target.value)} required maxLength={25} placeholder="+971 5X XXX XXXX" />
+            <label>Mobile number
+              <div className="phone-input-row">
+                <span className="phone-country-code">+971</span>
+                <input
+                  type="tel"
+                  inputMode="numeric"
+                  autoComplete="tel-national"
+                  value={mobile}
+                  onChange={(e) => setMobile(e.target.value.replace(/\D/g, "").slice(0, 9))}
+                  required
+                  minLength={9}
+                  maxLength={9}
+                  placeholder="5X XXX XXXX"
+                />
+              </div>
+              <small>Enter 9 digits only, starting with 5.</small>
             </label>
           )}
           <label>Email address
