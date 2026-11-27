@@ -405,9 +405,24 @@ export default function SendMoneyPage() {
           {selectedPayout === "Bank transfer" || selectedPayout === "Bank account" ? (
             <>
               <label>
-                Recipient bank name
-                <input value={bankName} onChange={(event) => setBankName(event.target.value)} maxLength={120} placeholder="Search bank name" list="transfer-bank-options" required />
+                Search or enter recipient bank name
+                <input
+                  value={bankName}
+                  onChange={(event) => {
+                    setBankName(event.target.value);
+                    setBankBranch("");
+                    setBankBranchCode("");
+                    setIfsc("");
+                  }}
+                  maxLength={120}
+                  placeholder="Search or type bank name manually"
+                  list="transfer-bank-options"
+                  required
+                />
                 <datalist id="transfer-bank-options">{(DESTINATION_BANKS[country] ?? []).map((item) => <option key={item} value={item} />)}</datalist>
+                <small>{country === "India"
+                  ? "If your Indian bank is not shown in the suggestions, type its full bank name manually. Enter the IFSC and branch details below."
+                  : "If your bank is not listed, type its full name manually and enter the branch details below."}</small>
               </label>
               <label>
                 Bank account holder name
