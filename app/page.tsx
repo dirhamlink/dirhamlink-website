@@ -15,13 +15,25 @@ const moreCountries = [
   ["🇻🇳", "Vietnam"], ["🇨🇳", "China"], ["🇺🇬", "Uganda"],
 ];
 
+function BrandMark() {
+  return (
+    <span className="brand-mark" aria-hidden="true">
+      <svg viewBox="0 0 40 40" width="27" height="27" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M8 15.5A13 13 0 0 1 30.5 9L34 12.5M34 12.5V5.5M34 12.5H27" stroke="#F5C85B" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M32 24.5A13 13 0 0 1 9.5 31L6 27.5M6 27.5V34.5M6 27.5H13" stroke="#FFFFFF" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+        <path d="M23.5 13.5H18.8C16.7 13.5 15 15.2 15 17.3C15 19.4 16.7 21.1 18.8 21.1H21.2C23.3 21.1 25 22.8 25 24.9C25 27 23.3 28.7 21.2 28.7H15.5M20 10.5V31.5" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round"/>
+      </svg>
+    </span>
+  );
+}
+
 export default function Home() {
   return (
     <>
       <header className="site-header">
         <div className="container nav">
           <a className="brand" href="#" aria-label="DirhamLink home">
-            <span className="brand-mark">D</span> DirhamLink
+            <BrandMark /> DirhamLink
           </a>
           <nav className="nav-links" aria-label="Main navigation">
             <a href="#rates">Exchange Rates</a>
