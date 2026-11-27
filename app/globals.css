@@ -114,3 +114,28 @@ button, input, select { font: inherit; }
   .calculator { padding: 23px; }
   .cta, .footer-row { align-items: flex-start; flex-direction: column; }
 }
+
+
+/* Customer authentication */
+.auth-page { min-height: 100vh; padding: 36px 16px; display: grid; place-items: center; background: linear-gradient(135deg, #eef5ff, #f8faff 55%, #e8f1ff); }
+.auth-card { width: min(100%, 470px); padding: 34px; border: 1px solid var(--line); border-radius: 20px; background: #fff; box-shadow: 0 20px 60px #10233e12; }
+.auth-brand { margin-bottom: 30px; }
+.auth-eyebrow { color: var(--blue); margin: 0 0 9px; }
+.auth-card h1 { font: 800 30px Manrope, sans-serif; letter-spacing: -1px; margin: 0 0 8px; color: var(--navy); }
+.auth-intro { color: var(--muted); line-height: 1.6; margin: 0 0 24px; overflow-wrap: anywhere; }
+.auth-form { display: grid; gap: 16px; }
+.auth-form label { display: grid; gap: 7px; font-size: 13px; font-weight: 700; color: var(--ink); }
+.auth-form input { width: 100%; padding: 13px 14px; border: 1px solid #d7e0eb; border-radius: 10px; outline: none; background: #fff; color: var(--ink); }
+.auth-form input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #1769e018; }
+.auth-form small { color: var(--muted); font-weight: 400; }
+.auth-submit { width: 100%; min-height: 48px; margin-top: 4px; }
+.auth-submit:disabled { opacity: .65; cursor: wait; }
+.auth-error, .auth-success { padding: 11px 12px; border-radius: 9px; font-size: 13px; line-height: 1.5; overflow-wrap: anywhere; }
+.auth-error { color: #a32626; background: #fff0f0; }
+.auth-success { color: #126744; background: #eaf8f1; }
+.auth-switch { text-align: center; color: var(--muted); font-size: 13px; margin: 20px 0; }
+.auth-switch a, .auth-home { color: var(--blue); font-weight: 700; }
+.auth-disclaimer { color: var(--muted); font-size: 11px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 16px; }
+.auth-home { display: inline-block; margin-top: 10px; font-size: 13px; }
+.account-notice { padding: 15px; margin: 18px 0; border-radius: 12px; background: #f1f6fd; color: #425873; font-size: 13px; line-height: 1.65; }
+@media (max-width: 480px) { .auth-card { padding: 25px 20px; } }
