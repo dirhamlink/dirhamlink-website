@@ -70,11 +70,11 @@ drop policy if exists "Customers view own cash deposits" on public.cash_deposit_
 create policy "Customers view own cash deposits" on public.cash_deposit_submissions
  for select to authenticated using (customer_id = auth.uid());
 drop policy if exists "Team review cash deposits" on public.cash_deposit_submissions;
-create policy "Team review cash deposits" on public.cash_deposit_submissions
- for all to authenticated using (public.is_active_dirhamlink_team_member())
- with check (public.is_active_dirhamlink_team_member());
+drop policy if exists "Team view cash deposits" on public.cash_deposit_submissions;
+create policy "Team view cash deposits" on public.cash_deposit_submissions
+ for select to authenticated using (public.is_active_dirhamlink_team_member());
+revoke all on public.cash_deposit_submissions from authenticated;
 grant select, insert on public.cash_deposit_submissions to authenticated;
-grant update, select on public.cash_deposit_submissions to authenticated;
 
 -- When authorised staff verify an actual deposit, advance only to funds received/pending checks.
 create or replace function public.sync_verified_cash_deposit_to_transfer()
@@ -118,3 +118,24 @@ create policy "Customers read own deposit receipts" on storage.objects
    or public.is_active_dirhamlink_team_member()
   )
 );
+
+-- Staff status changes must go through this checked RPC; customers cannot update status columns.
+create or replace function public.review_dirhamlink_cash_deposit(
+ p_deposit_id uuid, p_status text, p_staff_note text default null
+) returns void
+language plpgsql security definer set search_path = public as $$
+begin
+ if not public.is_active_dirhamlink_team_member() then
+   raise exception 'Authorised DirhamLink team access required';
+ end if;
+ if p_status not in ('verified','rejected','under_review') then
+   raise exception 'Invalid deposit review status';
+ end if;
+ update public.cash_deposit_submissions
+    set status = p_status, staff_note = nullif(trim(coalesce(p_staff_note,'')), '')
+  where id = p_deposit_id;
+ if not found then raise exception 'Cash deposit submission not found'; end if;
+end;
+$$;
+revoke all on function public.review_dirhamlink_cash_deposit(uuid,text,text) from public;
+grant execute on function public.review_dirhamlink_cash_deposit(uuid,text,text) to authenticated;
