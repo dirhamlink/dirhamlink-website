@@ -153,9 +153,10 @@ export default function AccountPage() {
           </div>
         ))}
         <div className="account-notice">
-          <strong>Support contact — Arshdeep Singh</strong><br />
-          Email: <a href="mailto:deepdxb2004@gmail.com">deepdxb2004@gmail.com</a><br />
-          WhatsApp: <a href="https://wa.me/971541797541" target="_blank" rel="noreferrer">+971 54 179 7541</a>
+          <strong>Need help with your account or transfer?</strong>
+          <p>Choose an issue and send our support team a message with your account and available transaction details.</p>
+          <Link className="btn btn-outline" href="/support">Contact Support</Link>{" "}
+          <a className="btn btn-primary" href="https://wa.me/971541797541?text=Hello%20DirhamLink%20Support%2C%20I%20need%20assistance." target="_blank" rel="noreferrer">Chat With Us</a>
         </div>
         <div className="account-notice">
           The 5-hour countdown is an estimated service target from submission, not a guarantee or proof of payout. If the transfer has not been successfully credited to the recipient’s bank account within the stated timeframe, please contact our support team and provide your transaction reference so we can check its status. Cash receipt, compliance approval and payout confirmation still require verified, authorised operational processes. Do not make a deposit until DirhamLink issues approved instructions.
