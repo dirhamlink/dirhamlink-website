@@ -423,7 +423,7 @@ export default function SendMoneyPage() {
               {payoutOptions.map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </label>
-          <p className="auth-disclaimer">These are payout preferences for your request only. Availability, provider support, recipient eligibility, fees and final currency are subject to confirmation by DirhamLink staff. Selecting an option does not mean a payout partner is connected or that payment is guaranteed.</p>
+          <p className="auth-disclaimer">Receiving currency: <strong>{destination.currency}</strong>. These are payout preferences for your request only. Availability, provider support, recipient eligibility, fees and final currency are subject to confirmation by DirhamLink staff. Selecting an option does not mean a payout partner is connected or that payment is guaranteed.</p>
 
           {isWalletPayout ? (
             <label>
