@@ -67,7 +67,7 @@ export default async function DestinationPage({ params }: { params: Promise<{ co
 
         <section className="destination-section">
           <div className="destination-section-heading"><div><span className="destination-eyebrow">Economy & diaspora</span><h2>Annual remittance inflows</h2></div><span className="destination-unit">Current US dollars</span></div>
-          <p className="destination-description">Personal remittances received, reported annually by the World Bank. Values are nominal USD and may be revised as source data is updated.</p>
+          <p className="destination-description">Personal remittances received from all sending countries, reported annually by the World Bank. This indicator includes personal transfers and compensation of employees; it is not limited to money sent from the UAE. Values are nominal USD and may be revised as source data is updated.</p>
           {remittances.length ? <div className="remittance-chart" role="img" aria-label={`Annual personal remittances received by ${destination.name}, in US dollars`}>
             {remittances.map((row) => <div className="remittance-bar-wrap" key={row.date}>
               <div className="remittance-value">{formatUSD(row.value ?? 0)}</div>
