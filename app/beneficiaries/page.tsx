@@ -34,7 +34,7 @@ export default function BeneficiariesPage(){
   const {data:auth}=await supabase.auth.getUser();
   if(!auth.user){router.replace("/login");return;}
   setUserId(auth.user.id);
-  const {data,error}=await supabase.from("beneficiaries").select("*").order("created_at",{ascending:false});
+  const {data,error}=await supabase.from("beneficiaries").select("*").eq("customer_id",auth.user.id).order("created_at",{ascending:false});
   if(error)setError(error.message); else setRows((data??[]) as Beneficiary[]);
   setLoading(false);
  }
