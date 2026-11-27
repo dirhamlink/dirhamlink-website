@@ -126,8 +126,7 @@ export default function SupportPage() {
     "Please review the details, contact me using the account information above, and advise on the appropriate resolution. Any transaction or beneficiary changes must be verified and approved by authorised DirhamLink staff.",
     "",
     "Thank you.",
-  ].join("
-"), [issue, name, mobile, email, chosenTransfer, details]);
+  ].join("\n"), [issue, name, mobile, email, chosenTransfer, details]);
 
   function sendEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
