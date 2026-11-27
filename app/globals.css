@@ -185,3 +185,48 @@ button, input, select { font: inherit; }
   .team-detail-grid { grid-template-columns:1fr; }
   .team-transaction-head { flex-direction:column; }
 }
+
+/* Destination profiles */
+.destination-page { min-height:100vh; padding:28px 0 60px; background:#f5f8fc; }
+.destination-shell { width:min(1080px,calc(100% - 36px)); margin:0 auto; }
+.destination-back { display:inline-block; color:#1769e0; font-weight:700; font-size:13px; margin:0 0 18px; }
+.destination-hero { position:relative; overflow:hidden; padding:42px; border-radius:22px; color:#fff; background:radial-gradient(circle at 90% 10%,#2868a4,transparent 38%),linear-gradient(120deg,#071b36,#104a79); }
+.destination-flag { font-size:52px; margin-bottom:10px; }
+.destination-eyebrow { display:block; color:#4b86d5; font-size:10px; letter-spacing:1.8px; text-transform:uppercase; font-weight:800; }
+.destination-hero .destination-eyebrow { color:#a9d3ff; }
+.destination-hero h1 { font:800 clamp(36px,6vw,54px) Manrope,sans-serif; margin:8px 0; letter-spacing:-1.8px; }
+.destination-hero p { max-width:680px; color:#d5e5f6; line-height:1.75; margin:0; }
+.destination-meta { display:flex; flex-wrap:wrap; gap:10px; margin-top:22px; }
+.destination-meta span { padding:8px 12px; border:1px solid #ffffff44; background:#ffffff12; border-radius:30px; font-size:12px; }
+.destination-stats { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:18px 0; }
+.destination-stats article,.destination-section { background:#fff; border:1px solid #e5ebf2; border-radius:16px; padding:23px; }
+.destination-stats span { display:block; color:#68788e; font-size:12px; font-weight:700; }
+.destination-stats strong { display:block; color:#071b36; font:800 clamp(22px,4vw,30px) Manrope,sans-serif; margin:8px 0 4px; }
+.destination-stats small,.destination-source { color:#68788e; font-size:11px; }
+.destination-section { margin-top:16px; }
+.destination-section h2,.destination-cta h2 { font:800 24px Manrope,sans-serif; color:#071b36; margin:7px 0 10px; letter-spacing:-.6px; }
+.destination-description,.destination-section > p { color:#68788e; font-size:13px; line-height:1.75; }
+.destination-section-heading { display:flex; align-items:end; justify-content:space-between; gap:16px; }
+.destination-unit { color:#68788e; font-size:11px; }
+.remittance-chart { display:flex; align-items:stretch; gap:8px; height:210px; padding:15px 4px 0; overflow-x:auto; }
+.remittance-bar-wrap { min-width:54px; flex:1; display:flex; flex-direction:column; align-items:center; gap:7px; }
+.remittance-value { font-size:9px; color:#68788e; white-space:nowrap; }
+.remittance-bar-track { width:100%; flex:1; display:flex; align-items:end; background:#f1f5fa; border-radius:7px 7px 0 0; overflow:hidden; }
+.remittance-bar { width:100%; min-height:3px; background:linear-gradient(180deg,#5aa0f4,#1769e0); border-radius:7px 7px 0 0; }
+.remittance-bar-wrap > span { color:#52647b; font-size:10px; }
+.destination-source { display:block; margin-top:15px; line-height:1.6; }
+.destination-place-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-top:18px; }
+.destination-place { padding:17px; background:#f7faff; border:1px solid #e8eef6; border-radius:13px; }
+.destination-place > span { font-size:20px; }
+.destination-place h3 { color:#10233e; font:700 14px Manrope,sans-serif; margin:10px 0 6px; }
+.destination-place p { color:#68788e; font-size:12px; line-height:1.65; margin:0; }
+.destination-two-col { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+.destination-two-col .destination-section > p { margin-bottom:0; }
+.food-tags { display:flex; flex-wrap:wrap; gap:8px; margin-top:15px; }
+.food-tags span { background:#eef5ff; color:#174f9b; padding:8px 11px; border-radius:30px; font-size:12px; font-weight:700; }
+.destination-cta { margin-top:18px; padding:26px; display:flex; justify-content:space-between; align-items:center; gap:18px; border-radius:17px; background:#eaf3ff; }
+.destination-cta h2 { margin-top:0; }
+.destination-cta p { color:#566c88; font-size:13px; margin:0; line-height:1.6; }
+.destination-disclaimer { color:#718096; font-size:11px; line-height:1.7; margin:18px 2px 0; }
+@media(max-width:700px) { .destination-hero {padding:28px 23px;} .destination-stats {grid-template-columns:1fr;} .destination-place-grid {grid-template-columns:1fr 1fr;} .destination-two-col {grid-template-columns:1fr;} .destination-cta {align-items:flex-start;flex-direction:column;} .destination-section-heading {align-items:flex-start;flex-direction:column;} }
+@media(max-width:430px) { .destination-place-grid {grid-template-columns:1fr;} .remittance-bar-wrap {min-width:49px;} .remittance-value {font-size:8px;} }
