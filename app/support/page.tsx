@@ -118,7 +118,7 @@ export default function SupportPage() {
             "Recipient: " + chosenTransfer.recipient_full_name,
             "Current status: " + chosenTransfer.status,
             "Created: " + new Date(chosenTransfer.created_at).toLocaleString(),
-          ].join("\\n")
+          ].join("\n")
         : "No transfer selected / inquiry only",
       "",
       "Customer's explanation:",
@@ -128,7 +128,7 @@ export default function SupportPage() {
       "",
       "Thank you.",
     ];
-    return messageLines.join("\\n");
+    return messageLines.join("\n");
   }, [issue, name, mobile, email, chosenTransfer, details]);
 
   function sendEmail(event: FormEvent<HTMLFormElement>) {
