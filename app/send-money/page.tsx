@@ -29,6 +29,11 @@ export default function SendMoneyPage() {
   const [country, setCountry] = useState("India");
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
+  const [bankName, setBankName] = useState("");
+  const [accountName, setAccountName] = useState("");
+  const [accountNumber, setAccountNumber] = useState("");
+  const [ifsc, setIfsc] = useState("");
+  const [upiId, setUpiId] = useState("");
   const [payout, setPayout] = useState("Bank transfer");
   const [funding, setFunding] = useState("Bank CDM deposit");
   const [note, setNote] = useState("");
@@ -120,6 +125,14 @@ export default function SendMoneyPage() {
       setError("Enter the recipient's full name.");
       return;
     }
+    if (selectedPayout !== "Cash pickup" && !accountNumber.trim() && !upiId.trim()) {
+      setError("Enter the recipient bank account number or UPI ID before continuing.");
+      return;
+    }
+    if (selectedPayout === "UPI transfer" && !upiId.trim()) {
+      setError("Enter the recipient UPI ID.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -131,6 +144,11 @@ export default function SendMoneyPage() {
           destination_currency: destination.currency,
           send_amount_aed: numericAmount,
           recipient_full_name: recipient.trim(),
+          recipient_bank_name: bankName.trim() || null,
+          recipient_bank_account_name: accountName.trim() || null,
+          recipient_bank_account_number: accountNumber.trim() || null,
+          recipient_bank_ifsc: ifsc.trim() || null,
+          recipient_upi_id: upiId.trim() || null,
           payout_method: selectedPayout,
           funding_method: funding,
           reference_rate: referenceRate ?? null,
@@ -160,6 +178,11 @@ export default function SendMoneyPage() {
       );
       setAmount("");
       setRecipient("");
+      setBankName("");
+      setAccountName("");
+      setAccountNumber("");
+      setIfsc("");
+      setUpiId("");
       setNote("");
     } catch (err) {
       console.error("Unexpected DirhamLink transaction error:", err);
@@ -257,6 +280,38 @@ export default function SendMoneyPage() {
               {payoutOptions.map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </label>
+
+          {selectedPayout !== "Cash pickup" && (
+            <>
+              <label>
+                Recipient bank name
+                <input value={bankName} onChange={(event) => setBankName(event.target.value)} maxLength={120} placeholder="e.g. State Bank of India" />
+              </label>
+              <label>
+                Bank account holder name
+                <input value={accountName} onChange={(event) => setAccountName(event.target.value)} maxLength={120} placeholder="Name exactly as shown by the bank" />
+              </label>
+              {selectedPayout !== "UPI transfer" && (
+                <>
+                  <label>
+                    Recipient bank account number
+                    <input value={accountNumber} onChange={(event) => setAccountNumber(event.target.value)} maxLength={40} autoComplete="off" placeholder="Enter beneficiary account number" />
+                  </label>
+                  <label>
+                    IFSC / bank routing code
+                    <input value={ifsc} onChange={(event) => setIfsc(event.target.value.toUpperCase())} maxLength={20} autoComplete="off" placeholder="Enter IFSC or local routing code" />
+                  </label>
+                </>
+              )}
+              {country === "India" && (
+                <label>
+                  Recipient UPI ID (if applicable)
+                  <input value={upiId} onChange={(event) => setUpiId(event.target.value)} maxLength={120} autoComplete="off" placeholder="name@bank" />
+                </label>
+              )}
+              <p className="auth-disclaimer">Beneficiary details are confidential and visible to the customer account and authorised DirhamLink team members under database access rules. Double-check every detail before submitting.</p>
+            </>
+          )}
 
           <label>
             Planned funding method
