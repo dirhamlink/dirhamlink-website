@@ -132,7 +132,8 @@ export default function Home() {
       <footer className="site-footer">
         <div className="container footer-row">
           <a className="brand" href="#"><span className="brand-mark">D</span><span style={{ color: "#fff" }}>DirhamLink</span></a>
-          <p className="footer-note">DirhamLink provides information and inquiry assistance. Displayed rates are illustrative only and are not executable offers. Transfers are subject to confirmation, eligibility and applicable checks by the authorized service provider.</p>
+          <p className="footer-note">DirhamLink provides information and remittance inquiry assistance. Displayed rates are indicative only and are not executable offers. Transfers are subject to confirmation, funding verification, eligibility, compliance checks and processing by the authorised service provider. The stated 5-hour period is an estimated service target, not a guarantee of credit. If the transfer has not been credited to the recipient’s bank account within the stated timeframe, please contact our support team.</p>
+          <a href="/terms-and-conditions" className="footer-note">Terms and Conditions</a>
         </div>
       </footer>
     </>
