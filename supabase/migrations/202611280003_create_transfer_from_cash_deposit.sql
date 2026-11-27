@@ -13,6 +13,10 @@ language plpgsql
 security definer
 set search_path = public
 as $$
+alter table public.transfers drop constraint if exists transfers_funding_method_check;
+alter table public.transfers add constraint transfers_funding_method_check
+ check (funding_method in ('Bank CDM deposit','Bank branch cash deposit','Office cash deposit','Cash pickup arrangement'));
+
 declare
  v_b public.beneficiaries%rowtype;
  v_transfer_id uuid;
@@ -55,7 +59,7 @@ begin
   auth.uid(),v_b.destination_country,v_currency,p_amount_aed,
   v_b.recipient_full_name,v_b.bank_name,v_b.account_name,v_b.account_number,
   v_b.ifsc,v_b.bank_branch,v_b.bank_city,v_b.upi_id,v_b.payout_method,
-  'Bank CDM deposit',nullif(trim(coalesce(p_customer_note,'')),''),
+  p_deposit_method,nullif(trim(coalesce(p_customer_note,'')),''),
   'created'
  ) returning id, transaction_reference into v_transfer_id,v_reference;
 
