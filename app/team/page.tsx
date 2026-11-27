@@ -142,6 +142,7 @@ export default function TeamPortalPage() {
         {error && <div className="auth-error" role="alert">{error}</div>}
         {!loading && !error && <>
           {completionError && <div className="auth-error" role="alert">{completionError}</div>}
+          <div className="account-notice"><Link href="/team/deposits">Open cash deposit review queue →</Link></div>
           <div className="team-toolbar">
             <div><strong>{rows.length}</strong><small> recent transactions</small></div>
             <input aria-label="Search transactions" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search reference, recipient or country" />
