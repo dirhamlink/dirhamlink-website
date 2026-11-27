@@ -72,8 +72,8 @@ export default function SendMoneyPage() {
     "Sri Lanka": ["Bank transfer", "Wallet: eZ Cash", "Wallet: mCash", "Cash pickup"],
   };
   const payoutOptions = payoutOptionsByCountry[country] ?? ["Bank transfer", "Cash pickup"];
-  const isWalletPayout = selectedPayout.startsWith("Wallet:");
   const selectedPayout = payoutOptions.includes(payout) ? payout : payoutOptions[0];
+  const isWalletPayout = selectedPayout.startsWith("Wallet:");
   const numericAmount = Number(amount);
   const referenceRate = rates[destination.currency];
   const customerRate = customerRates[destination.currency] ?? referenceRate;
@@ -461,8 +461,8 @@ export default function SendMoneyPage() {
                 <input value={accountNumber} onChange={(event) => setAccountNumber(event.target.value)} maxLength={40} autoComplete="off" placeholder="Enter beneficiary account number" required />
               </label>
               <label>
-                IFSC / bank routing code
-                <input value={ifsc} onChange={(event) => setIfsc(event.target.value.toUpperCase())} maxLength={20} autoComplete="off" placeholder="Enter IFSC or local routing code" required />
+                IFSC (India) / local routing code (if required)
+                <input value={ifsc} onChange={(event) => setIfsc(event.target.value.toUpperCase())} maxLength={20} autoComplete="off" placeholder={country === "India" ? "Enter 11-character IFSC" : "Enter local routing code if applicable"} required={country === "India"} />
               </label>
               <label>
                 Search branch name or area
