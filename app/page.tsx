@@ -29,7 +29,8 @@ export default function Home() {
           </nav>
           <div className="nav-actions">
             <a className="btn btn-outline" href="#calculator">Calculate</a>
-            <a className="btn btn-primary" href="#inquiry">Get Started</a>
+            <a className="btn btn-outline" href="/login">Log in</a>
+            <a className="btn btn-primary" href="/register">Register</a>
           </div>
         </div>
       </header>
@@ -131,7 +132,7 @@ export default function Home() {
         <section className="container" id="inquiry">
           <div className="cta">
             <div><h2>Ready to take the next step?</h2><p>Send an inquiry and our team will help you understand the process.</p></div>
-            <a className="btn btn-primary" href="mailto:hello@dirhamlink.com?subject=Remittance%20inquiry">Make an inquiry ↗</a>
+            <a className="btn btn-primary" href="/register">Create a customer account ↗</a>
           </div>
         </section>
       </main>
