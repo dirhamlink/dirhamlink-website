@@ -1,12 +1,13 @@
 import CurrencyCalculator from "./components/currency-calculator";
+import LiveRateBoard from "./components/live-rate-board";
 
 const destinations = [
-  { name: "India", flag: "🇮🇳", currency: "INR", rate: "22.70" },
-  { name: "Pakistan", flag: "🇵🇰", currency: "PKR", rate: "75.90" },
-  { name: "Nepal", flag: "🇳🇵", currency: "NPR", rate: "36.20" },
-  { name: "Bangladesh", flag: "🇧🇩", currency: "BDT", rate: "33.10" },
-  { name: "Egypt", flag: "🇪🇬", currency: "EGP", rate: "13.25" },
-  { name: "Philippines", flag: "🇵🇭", currency: "PHP", rate: "15.85" },
+  { name: "India", flag: "🇮🇳", currency: "INR" },
+  { name: "Pakistan", flag: "🇵🇰", currency: "PKR" },
+  { name: "Nepal", flag: "🇳🇵", currency: "NPR" },
+  { name: "Bangladesh", flag: "🇧🇩", currency: "BDT" },
+  { name: "Egypt", flag: "🇪🇬", currency: "EGP" },
+  { name: "Philippines", flag: "🇵🇭", currency: "PHP" },
 ];
 
 const moreCountries = [
@@ -67,21 +68,12 @@ export default function Home() {
           <div className="rate-panel">
             <div className="section-heading">
               <div>
-                <h2>Explore exchange rates</h2>
-                <p>Indicative reference rates · Sample display only, not live rates</p>
+                <h2>Live market reference rates</h2>
+                <p>Automatically refreshed indicative rates from an external FX data provider.</p>
               </div>
               <span className="eyebrow" style={{ color: "#1769e0" }}>AED · UAE Dirham</span>
             </div>
-            <div className="rate-grid">
-              {destinations.map((country) => (
-                <article className="rate-card" key={country.currency}>
-                  <div className="country-top"><span className="flag">{country.flag}</span>{country.name}</div>
-                  <div className="currency">1 AED to {country.currency}</div>
-                  <div className="rate-value">{country.rate}</div>
-                  <div className="rate-note">Demo value · Not a quote</div>
-                </article>
-              ))}
-            </div>
+            <LiveRateBoard />
           </div>
         </section>
 
