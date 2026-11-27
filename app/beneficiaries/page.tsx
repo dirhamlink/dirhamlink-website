@@ -100,8 +100,11 @@ export default function BeneficiariesPage(){
     <label>Account holder name<input value={holder} onChange={e=>setHolder(e.target.value)} required maxLength={120}/></label>
     <label>Account number<input value={number} onChange={e=>setNumber(e.target.value)} required maxLength={40} autoComplete="off"/></label>
     <label>IFSC / routing code<input value={ifsc} onChange={e=>setIfsc(e.target.value.toUpperCase())} maxLength={20}/></label>
-    <label>Branch<input value={branch} onChange={e=>setBranch(e.target.value)} maxLength={120}/></label>
-    <label>City<input value={city} onChange={e=>setCity(e.target.value)} maxLength={100}/></label>
+    <label>Search branch or area<input value={branchSearch} onChange={e=>setBranchSearch(e.target.value)} maxLength={120} placeholder="Type branch, city or area"/></label>
+    {branchOptions.length>0&&<label>Select branch<select value={branchCode+"|"+branch} onChange={e=>{const item=branchOptions.find(x=>(x.branch_code??"")+"|"+x.branch_name===e.target.value);if(item){setBranch(item.branch_name);setBranchSearch(item.branch_name);setCity(item.city??item.district??"");setBranchCode(item.branch_code??"");if(item.ifsc)setIfsc(item.ifsc);}}}><option value="">Choose a listed branch</option>{branchOptions.filter(item=>(item.branch_name+" "+(item.city??"")+" "+(item.district??"")).toLowerCase().includes(branchSearch.toLowerCase())).map(item=><option key={item.id} value={(item.branch_code??"")+"|"+item.branch_name}>{item.branch_name} — {item.city??item.district??"Location unavailable"}{item.branch_code?" · "+item.branch_code:""}</option>)}</select></label>}
+    {branchDirectoryMessage&&<small>{branchDirectoryMessage}</small>}
+    <label>Branch code<input value={branchCode} onChange={e=>setBranchCode(e.target.value)} maxLength={40}/></label>
+    <label>City / District<input value={city} onChange={e=>setCity(e.target.value)} maxLength={100}/></label>
    </>}
    {method==="UPI transfer"&&<label>UPI ID<input value={upi} onChange={e=>setUpi(e.target.value)} required maxLength={120}/></label>}
    {error&&<p className="auth-error" role="alert">{error}</p>}{success&&<p className="auth-success">{success}</p>}
