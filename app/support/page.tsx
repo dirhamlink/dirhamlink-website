@@ -82,7 +82,7 @@ export default function SupportPage() {
 
   async function saveMobile() {
     setMobileMessage("");
-    if (!/^5\\d{8}$/.test(mobile)) { setMobileMessage("Enter exactly 9 UAE mobile digits, starting with 5."); return; }
+    if (!/^5\d{8}$/.test(mobile)) { setMobileMessage("Enter exactly 9 UAE mobile digits, starting with 5."); return; }
     setMobileSaving(true);
     const { data, error } = await supabase.auth.getUser();
     if (error || !data.user) { setMobileMessage("Please log in again to update your mobile number."); setMobileSaving(false); return; }
@@ -157,7 +157,7 @@ Issue: " + issue;
           <strong>Your account details</strong>
           <p>Name: {name || "Not available"}</p>
           <p>Mobile: {mobile ? "+971" + mobile : "Not added yet"}</p>
-          <label>UAE mobile number<div className="mobile-input-row"><span className="mobile-prefix">+971</span><input type="tel" inputMode="numeric" value={mobile} onChange={event => setMobile(event.target.value.replace(/\\D/g, "").slice(0, 9))} maxLength={9} minLength={9} pattern="5[0-9]{8}" placeholder="5XXXXXXXX"/></div><small>Enter 9 digits only, starting with 5. +971 is added automatically.</small></label>
+          <label>UAE mobile number<div className="mobile-input-row"><span className="mobile-prefix">+971</span><input type="tel" inputMode="numeric" value={mobile} onChange={event => setMobile(event.target.value.replace(/\D/g, "").slice(0, 9))} maxLength={9} minLength={9} pattern="5[0-9]{8}" placeholder="5XXXXXXXX"/></div><small>Enter 9 digits only, starting with 5. +971 is added automatically.</small></label>
           <button className="btn btn-outline auth-submit" type="button" onClick={() => void saveMobile()} disabled={mobileSaving}>{mobileSaving ? "Saving…" : "Save mobile number"}</button>
           {mobileMessage && <p className="auth-disclaimer" role="status">{mobileMessage}</p>}
           <p>Email: {email || "Not available"}</p>
