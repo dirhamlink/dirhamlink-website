@@ -98,20 +98,11 @@ export default function TeamPortalPage() {
 
   async function markCompleted(row: TeamTransfer) {
     setActionMessage("");
-    const confirmationReference = window.prompt(
-      `Only continue if the payout has actually been completed and independently verified. Enter the bank or payout confirmation reference for ${row.transaction_reference}:`
-    );
-    if (confirmationReference === null) return;
-    if (confirmationReference.trim().length < 3) {
-      setActionMessage("A valid payout confirmation reference is required. The transaction was not changed.");
-      return;
-    }
-    const confirmed = window.confirm(`Confirm that payout for ${row.transaction_reference} has actually reached the recipient? This will mark the transaction as Payout confirmed.`);
+    const confirmed = window.confirm(`Only continue if the payout for ${row.transaction_reference} has actually reached the recipient and has been independently verified. Confirming will mark it as Payout confirmed and generate an internal DirhamLink tracking reference.`);
     if (!confirmed) return;
     setUpdatingId(row.id);
     const { data: completionReference, error: updateError } = await supabase.rpc("mark_dirhamlink_transfer_completed", {
       p_transfer_id: row.id,
-      p_confirmation_reference: confirmationReference.trim(),
     });
     if (updateError) {
       setActionMessage("Could not mark transaction completed: " + updateError.message);
@@ -179,7 +170,7 @@ export default function TeamPortalPage() {
           </div>
         </>}
         {actionMessage && <div className="account-notice" role="status">{actionMessage}</div>}
-        <div className="account-notice">The completion button records a staff confirmation only. It does not send money or verify a bank transfer automatically. Use it only after the payout has actually been completed and independently verified. Each action requires a confirmation reference and is audit-logged.</div>
+        <div className="account-notice">The completion button records a staff confirmation only. It does not send money or verify a bank transfer automatically. Use it only after the payout has actually been completed and independently verified. Each action is audit-logged and receives an automatically generated internal completion reference.</div>
         <button className="btn btn-outline auth-submit" onClick={signOut}>Log out</button>
         <Link className="auth-home" href="/account">Customer account</Link>
       </section>
