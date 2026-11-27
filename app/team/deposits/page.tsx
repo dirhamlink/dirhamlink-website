@@ -37,11 +37,18 @@ export default function TeamDepositsPage(){
   }
   setLoading(false);
  })();},[router]);
- async function review(row:Deposit,status:"verified"|"rejected"){
-  if(status==="verified"&&!window.confirm("Confirm only after independently checking the actual bank/CDM account records. A receipt image alone is not proof of funds. Verify this deposit?"))return;
+ async function decide(row:Deposit,decision:"received"|"not_received"){
+  const received=decision==="received";
+  const prompt=received
+    ?"Confirm that the exact AED amount is visible as cleared/received in the actual bank or CDM account records. A receipt image alone is not proof. This moves the transfer to pending checks; it does not send money. Continue?"
+    :"Confirm that the funds were not received after checking the bank or CDM account records. This will reject the deposit and cancel the linked transfer. Continue?";
+  if(!window.confirm(prompt))return;
   setBusy(row.id);setError("");
-  const {error}=await supabase.rpc("review_dirhamlink_cash_deposit",{p_deposit_id:row.id,p_status:status,p_staff_note:notes[row.id]?.trim()||null});
-  if(error)setError(error.message);else setRows(old=>old.map(x=>x.id===row.id?{...x,status,staff_note:notes[row.id]?.trim()||null}:x));
+  const {error}=await supabase.rpc("decide_dirhamlink_cash_deposit",{
+    p_deposit_id:row.id,p_decision:decision,p_staff_note:notes[row.id]?.trim()||null
+  });
+  if(error)setError(error.message);
+  else setRows(old=>old.map(x=>x.id===row.id?{...x,status:received?"verified":"rejected",staff_note:notes[row.id]?.trim()||null}:x));
   setBusy(null);
  }
  return <main className="auth-page team-page"><section className="auth-card dashboard-card team-card">
@@ -59,14 +66,21 @@ export default function TeamDepositsPage(){
     <div><small>Customer ID</small><strong className="team-id">{row.customer_id}</strong></div>
     <div><small>Customer note</small><strong>{row.customer_note||"—"}</strong></div>
    </div>
-   {row.receipt_path&&links[row.receipt_path]&&<p><a href={links[row.receipt_path]} target="_blank" rel="noreferrer">Open private receipt (expires in 5 minutes)</a></p>}
+   {row.receipt_path&&links[row.receipt_path]&&<div className="account-notice" style={{marginTop:12}}>
+    <strong>Customer-uploaded deposit receipt</strong>
+    {/\.pdf$/i.test(row.receipt_path)?<><p><a href={links[row.receipt_path]} target="_blank" rel="noreferrer">Open PDF receipt (private link, expires in 5 minutes)</a></p><iframe title="Customer deposit receipt PDF" src={links[row.receipt_path]} style={{width:"100%",height:420,border:"1px solid #ddd",borderRadius:8}}/></>:<><a href={links[row.receipt_path]} target="_blank" rel="noreferrer"><img src={links[row.receipt_path]} alt="Customer-uploaded deposit receipt" style={{display:"block",width:"100%",maxHeight:420,objectFit:"contain",background:"#f7f7f7",borderRadius:8,marginTop:8}}/></a></>}
+   </div>}
    {row.status!=="verified"&&row.status!=="rejected"?<>
     <label>Staff review note<textarea rows={2} maxLength={1000} value={notes[row.id]??""} onChange={e=>setNotes(old=>({...old,[row.id]:e.target.value}))}/></label>
-    <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
-     <button className="btn btn-primary" disabled={busy!==null} onClick={()=>void review(row,"verified")}>{busy===row.id?"Saving…":"Verify funds received"}</button>
-     <button className="btn btn-outline" disabled={busy!==null} onClick={()=>void review(row,"rejected")}>Reject submission</button>
+    <div className="account-notice" style={{marginTop:12}}>
+     <strong>Choose one payment decision</strong>
+     <p>Check the actual bank/CDM account ledger and confirm the cleared amount matches AED {Number(row.amount_aed).toFixed(2)}. Do not rely on the uploaded receipt alone.</p>
+     <div style={{display:"flex",gap:8,marginTop:12,flexWrap:"wrap"}}>
+      <button type="button" className="btn btn-primary" disabled={busy!==null} onClick={()=>void decide(row,"received")}>{busy===row.id?"Saving…":"Payment received — verify funds"}</button>
+      <button type="button" className="btn btn-outline" disabled={busy!==null} onClick={()=>void decide(row,"not_received")}>{busy===row.id?"Saving…":"Payment not received — cancel transfer"}</button>
+     </div>
     </div>
-   </>:<p className={row.status==="verified"?"auth-success":"auth-error"}>{row.status==="verified"?"Funds marked verified; transfer moved to funds received / checks pending.":"Deposit submission rejected."}{row.staff_note?" Staff note: "+row.staff_note:""}</p>}
+   </>:<p className={row.status==="verified"?"auth-success":"auth-error"}>{row.status==="verified"?"Funds independently marked received; transfer moved to funds received / checks pending. Payout has not been initiated.":"Funds not received; deposit rejected and linked transfer cancelled."}{row.staff_note?" Staff note: "+row.staff_note:""}</p>}
   </article>)}
   <div className="account-notice">Verification advances a transfer only to “Funds received — checks pending”. It does not approve compliance or confirm recipient payout.</div>
   <Link className="auth-home" href="/team">← Back to team portal</Link>
