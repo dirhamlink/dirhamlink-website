@@ -152,3 +152,6 @@ button, input, select { font: inherit; }
 .dashboard-coming { color: #8a6419; background: #fff6df; border-radius: 20px; padding: 5px 9px; font-size: 11px; font-weight: 700; margin-top: 4px; }
 .dashboard-disabled { background: #f9fbfe; }
 @media (max-width: 480px) { .dashboard-grid { grid-template-columns: 1fr; } }
+
+.auth-form select, .auth-form textarea { width: 100%; padding: 13px 14px; border: 1px solid #d7e0eb; border-radius: 10px; outline: none; background: #fff; color: var(--ink); font: inherit; }
+.auth-form select:focus, .auth-form textarea:focus { border-color: var(--blue); box-shadow: 0 0 0 3px #1769e018; }
