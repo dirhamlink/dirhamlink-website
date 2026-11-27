@@ -34,6 +34,12 @@ export default function AccountPage() {
   const [transfers, setTransfers] = useState<Transfer[]>([]);
   const [loading, setLoading] = useState(true);
   const [transferError, setTransferError] = useState("");
+  const [clockNow, setClockNow] = useState(Date.now());
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setClockNow(Date.now()), 1000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -113,10 +119,11 @@ export default function AccountPage() {
             <strong>{transfer.transaction_reference}</strong>
             <small>{transfer.destination_country} · AED {Number(transfer.send_amount_aed).toFixed(2)} · {new Date(transfer.created_at).toLocaleString()}</small>
             <span className="dashboard-action">{statusLabels[transfer.status] || transfer.status}</span>
+            {transfer.status !== "payout_confirmed" && transfer.status !== "rejected" && transfer.status !== "cancelled" && (() => { const ms = Math.max(0, 5 * 60 * 60 * 1000 - (clockNow - new Date(transfer.created_at).getTime())); if (ms <= 0) return <small>5-hour target window elapsed. Please contact DirhamLink for an update.</small>; const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); const s = Math.floor((ms % 60000) / 1000); return <small>Estimated completion target: {h}h {m}m {s}s remaining (within 5 hours of submission).</small>; })()}
           </div>
         ))}
         <div className="account-notice">
-          Transaction creation and customer tracking are being activated. Cash receipt, compliance approval and payout confirmation must be completed through verified, authorised operational processes. No deposit should be made until DirhamLink issues approved instructions.
+          The 5-hour countdown is an estimated service target from submission, not a guarantee or proof of payout. Cash receipt, compliance approval and payout confirmation still require verified, authorised operational processes. No deposit should be made until DirhamLink issues approved instructions.
         </div>
         <button className="btn btn-primary auth-submit" onClick={signOut}>Log out</button>
         <Link className="auth-home" href="/">Back to homepage</Link>
