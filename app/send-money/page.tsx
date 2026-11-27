@@ -5,7 +5,24 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
 
-const countries = ["India", "Pakistan", "Nepal", "Bangladesh", "Egypt", "Philippines", "Sri Lanka"];
+const destinations = [
+  { country: "India", currency: "INR" },
+  { country: "Pakistan", currency: "PKR" },
+  { country: "Nepal", currency: "NPR" },
+  { country: "Bangladesh", currency: "BDT" },
+  { country: "Egypt", currency: "EGP" },
+  { country: "Philippines", currency: "PHP" },
+  { country: "Sri Lanka", currency: "LKR" },
+];
+
+type RatesResponse = {
+  rates?: Record<string, number>;
+  source?: string;
+  timestamp?: number | null;
+  data_updated_at?: number | null;
+  delayed_minutes?: number;
+  error?: string;
+};
 
 export default function SendMoneyPage() {
   const router = useRouter();
@@ -16,9 +33,20 @@ export default function SendMoneyPage() {
   const [payout, setPayout] = useState("Bank account");
   const [funding, setFunding] = useState("Bank CDM deposit");
   const [note, setNote] = useState("");
+  const [rates, setRates] = useState<Record<string, number>>({});
+  const [rateSource, setRateSource] = useState("");
+  const [rateUpdatedAt, setRateUpdatedAt] = useState<number | null>(null);
+  const [rateError, setRateError] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+
+  const destination = destinations.find(item => item.country === country) ?? destinations[0];
+  const numericAmount = Number(amount);
+  const referenceRate = rates[destination.currency];
+  const estimatedPayout = Number.isFinite(numericAmount) && numericAmount > 0 && referenceRate
+    ? numericAmount * referenceRate
+    : null;
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data, error: authError }) => {
@@ -27,33 +55,58 @@ export default function SendMoneyPage() {
     });
   }, [router]);
 
+  useEffect(() => {
+    let active = true;
+    async function loadRates() {
+      try {
+        const response = await fetch("/api/rates", { cache: "no-store" });
+        const data = await response.json() as RatesResponse;
+        if (!response.ok || !data.rates) throw new Error(data.error || "Rates are temporarily unavailable.");
+        if (active) {
+          setRates(data.rates);
+          setRateSource(data.source || "Market reference provider");
+          setRateUpdatedAt(data.data_updated_at ?? data.timestamp ?? null);
+          setRateError("");
+        }
+      } catch (err) {
+        if (active) setRateError(err instanceof Error ? err.message : "Rates are temporarily unavailable.");
+      }
+    }
+    loadRates();
+    const timer = window.setInterval(loadRates, 60000);
+    return () => { active = false; window.clearInterval(timer); };
+  }, []);
+
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError("");
     setSuccess("");
     if (!userId) return setError("Please log in again and try once more.");
-    const numericAmount = Number(amount);
-    if (!Number.isFinite(numericAmount) || numericAmount <= 0 || numericAmount > 100000) {
+    if (!Number.isFinite(numericAmount) || numericAmount < 1 || numericAmount > 100000) {
       return setError("Enter an amount between AED 1 and AED 100,000.");
     }
     setLoading(true);
-    const { data, error: insertError } = await supabase.from("transfer_requests").insert({
+    const { data, error: insertError } = await supabase.from("transfers").insert({
       customer_id: userId,
       destination_country: country,
+      destination_currency: destination.currency,
       send_amount_aed: numericAmount,
       recipient_full_name: recipient.trim(),
       payout_method: payout,
       funding_method: funding,
+      reference_rate: referenceRate ?? null,
+      rate_source: referenceRate ? rateSource : null,
+      rate_captured_at: referenceRate ? new Date().toISOString() : null,
       customer_note: note.trim() || null,
-    }).select("id").single();
+    }).select("id, transaction_reference, status").single();
     setLoading(false);
     if (insertError) {
-      setError(insertError.message.includes("transfer_requests")
-        ? "The request form is ready, but the database setup is not finished yet. Please contact DirhamLink support."
+      setError(insertError.message.includes("transfers")
+        ? "Transaction setup is not finished. Please ask the administrator to run the latest Supabase migration."
         : insertError.message);
       return;
     }
-    setSuccess("Your inquiry has been submitted. Reference: " + data.id + ". Our team will contact you. This is not a confirmed transfer or payment instruction.");
+    setSuccess("Your transaction record has been created. Reference: " + data.transaction_reference + ". Status: Created. DirhamLink staff must review it and confirm the final customer rate and authorised funding instructions before any payment is made.");
     setAmount("");
     setRecipient("");
     setNote("");
@@ -63,24 +116,31 @@ export default function SendMoneyPage() {
     <main className="auth-page">
       <section className="auth-card dashboard-card">
         <Link className="brand auth-brand" href="/account"><span className="brand-mark">D</span>DirhamLink</Link>
-        <p className="eyebrow auth-eyebrow">Customer service</p>
-        <h1>Send money inquiry</h1>
-        <p className="auth-intro">Tell us what you need. Our team will review your request and contact you with the next steps.</p>
-        <div className="account-notice">This form submits an inquiry only. It does not book an exchange rate, accept cash, or initiate a money transfer. Please wait for verified instructions from DirhamLink staff.</div>
+        <p className="eyebrow auth-eyebrow">Customer transfers</p>
+        <h1>Start a transfer</h1>
+        <p className="auth-intro">Create and track your transfer on DirhamLink. Your transaction receives a unique reference as soon as it is created.</p>
+        <div className="account-notice">Transaction creation is live. This does not itself lock an exchange rate, confirm receipt of funds, approve compliance, or send money. Wait for verified instructions from DirhamLink before depositing cash.</div>
         <form className="auth-form" onSubmit={submit}>
           <label>Destination country
-            <select value={country} onChange={e => setCountry(e.target.value)}>{countries.map(c => <option key={c}>{c}</option>)}</select>
+            <select value={country} onChange={e => setCountry(e.target.value)}>{destinations.map(item => <option key={item.country} value={item.country}>{item.country} ({item.currency})</option>)}</select>
           </label>
-          <label>Amount you want to send (AED)
+          <label>Amount to send (AED)
             <input type="number" inputMode="decimal" min="1" max="100000" step="0.01" value={amount} onChange={e => setAmount(e.target.value)} placeholder="e.g. 1000" required />
           </label>
+          <div className="calc-result">
+            <small>Indicative market reference estimate</small>
+            <strong>{estimatedPayout !== null ? estimatedPayout.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " " + destination.currency : "Rate unavailable"}</strong>
+            <small>{referenceRate ? "1 AED = " + referenceRate + " " + destination.currency : rateError || "Waiting for the rate provider."}</small>
+            <small>Not a confirmed DirhamLink selling rate. Final rate and fees require staff confirmation.</small>
+            {rateUpdatedAt && <small>Provider: {rateSource || "Market reference"} · Updated: {new Date(rateUpdatedAt * 1000).toLocaleString()}</small>}
+          </div>
           <label>Recipient full name
             <input value={recipient} onChange={e => setRecipient(e.target.value)} minLength={2} maxLength={120} autoComplete="name" placeholder="Name of the person receiving money" required />
           </label>
           <label>How should the recipient receive the money?
             <select value={payout} onChange={e => setPayout(e.target.value)}><option>Bank account</option><option>Cash pickup</option></select>
           </label>
-          <label>How do you expect to fund the transfer?
+          <label>Planned funding method
             <select value={funding} onChange={e => setFunding(e.target.value)}><option>Bank CDM deposit</option><option>Office cash deposit</option><option>Cash pickup arrangement</option></select>
           </label>
           <label>Additional note (optional)
@@ -88,9 +148,9 @@ export default function SendMoneyPage() {
           </label>
           {error && <p className="auth-error" role="alert">{error}</p>}
           {success && <p className="auth-success" role="status">{success}</p>}
-          <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>{loading ? "Submitting…" : "Submit inquiry"}</button>
+          <button className="btn btn-primary auth-submit" type="submit" disabled={loading}>{loading ? "Creating transaction…" : "Create transaction"}</button>
         </form>
-        <p className="auth-disclaimer">Do not deposit money until our staff has contacted you and confirmed the approved process for your request. Uploading a receipt will not by itself confirm that funds have been received.</p>
+        <p className="auth-disclaimer">Do not deposit money until DirhamLink staff have verified your transaction and issued approved instructions. Uploading a receipt alone is not proof that funds have been received. Payout is not yet automated.</p>
         <Link className="auth-home" href="/account">← Back to dashboard</Link>
       </section>
     </main>
