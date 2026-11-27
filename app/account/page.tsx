@@ -14,6 +14,8 @@ type Transfer = {
   created_at: string;
 };
 
+type PayoutReceipt = { id: string; transfer_id: string; receipt_path: string; staff_note: string | null; created_at: string };
+
 const statusLabels: Record<string, string> = {
   created: "Created",
   under_review: "Under review",
@@ -35,6 +37,7 @@ export default function AccountPage() {
   const [loading, setLoading] = useState(true);
   const [transferError, setTransferError] = useState("");
   const [clockNow, setClockNow] = useState(Date.now());
+  const [payoutReceiptLinks, setPayoutReceiptLinks] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     const timer = window.setInterval(() => setClockNow(Date.now()), 1000);
@@ -58,7 +61,25 @@ export default function AccountPage() {
         .limit(10);
       if (!active) return;
       if (rowsError) setTransferError("Run the latest database migration to enable transaction tracking.");
-      else setTransfers((rows ?? []) as Transfer[]);
+      else {
+        const transferRows = (rows ?? []) as Transfer[];
+        setTransfers(transferRows);
+        if (transferRows.length) {
+          const { data: receipts } = await supabase
+            .from("transfer_payout_receipts")
+            .select("id, transfer_id, receipt_path, staff_note, created_at")
+            .in("transfer_id", transferRows.map((item) => item.id))
+            .order("created_at", { ascending: false });
+          const grouped: Record<string, string[]> = {};
+          for (const receipt of (receipts ?? []) as PayoutReceipt[]) {
+            const { data: signed } = await supabase.storage
+              .from("payout-transfer-receipts")
+              .createSignedUrl(receipt.receipt_path, 300);
+            if (signed?.signedUrl) grouped[receipt.transfer_id] = [...(grouped[receipt.transfer_id] ?? []), signed.signedUrl];
+          }
+          if (active) setPayoutReceiptLinks(grouped);
+        }
+      }
       setLoading(false);
     }
     loadAccount();
@@ -76,7 +97,7 @@ export default function AccountPage() {
   return (
     <main className="auth-page">
       <section className="auth-card dashboard-card">
-        <Link className="brand auth-brand" href="/"><span className="brand-mark">D</span>DirhamLink</Link>
+        <Link className="brand auth-brand" href="/"><span className="brand-mark">↔</span>DirhamLink</Link>
         <p className="eyebrow auth-eyebrow">Customer dashboard</p>
         <h1>Welcome to DirhamLink</h1>
         <p className="auth-intro">You are signed in as <strong>{email}</strong>.</p>
@@ -119,6 +140,15 @@ export default function AccountPage() {
             <strong>{transfer.transaction_reference}</strong>
             <small>{transfer.destination_country} · AED {Number(transfer.send_amount_aed).toFixed(2)} · {new Date(transfer.created_at).toLocaleString()}</small>
             <span className="dashboard-action">{statusLabels[transfer.status] || transfer.status}</span>
+            {transfer.status === "payout_confirmed" && (payoutReceiptLinks[transfer.id]?.length ?? 0) > 0 && (
+              <div className="account-notice" style={{ marginTop: 10 }}>
+                <strong>Official payout receipt uploaded by DirhamLink team</strong>
+                <p>Open your transfer confirmation document:</p>
+                {payoutReceiptLinks[transfer.id].map((url, index) => (
+                  <p key={url}><a href={url} target="_blank" rel="noreferrer">View payout receipt {index + 1} ↗</a></p>
+                ))}
+              </div>
+            )}
             {transfer.status !== "payout_confirmed" && transfer.status !== "rejected" && transfer.status !== "cancelled" && (() => { const ms = Math.max(0, 5 * 60 * 60 * 1000 - (clockNow - new Date(transfer.created_at).getTime())); if (ms <= 0) return <small>5-hour target window elapsed. Please contact DirhamLink for an update.</small>; const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); const s = Math.floor((ms % 60000) / 1000); return <small>Estimated completion target: {h}h {m}m {s}s remaining (within 5 hours of submission).</small>; })()}
           </div>
         ))}
