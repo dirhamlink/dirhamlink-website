@@ -148,8 +148,8 @@ export default function Home() {
           <div className="footer-note">
             <strong>Customer support</strong><br />
             Arshdeep Singh · DirhamLink team<br />
-            Email: <a href="mailto:deepdxb2004@gmail.com">deepdxb2004@gmail.com</a><br />
-            WhatsApp: <a href="https://wa.me/971541797541" target="_blank" rel="noreferrer">+971 54 179 7541</a>
+            Email: <a href="/support">Contact Support</a><br />
+            <a className="btn btn-primary" href="https://wa.me/971541797541?text=Hello%20DirhamLink%20Support%2C%20I%20need%20assistance." target="_blank" rel="noreferrer">Chat With Us</a>
           </div>
           <a href="/terms-and-conditions" className="footer-note">Terms and Conditions</a>
         </div>
