@@ -48,6 +48,7 @@ export default function SendMoneyPage() {
   const [branchSearch,setBranchSearch]=useState("");
   const [branchDirectoryMessage,setBranchDirectoryMessage]=useState("");
   const [upiId, setUpiId] = useState("");
+  const [walletNumber, setWalletNumber] = useState("");
   const [payout, setPayout] = useState("Bank transfer");
   const [funding, setFunding] = useState("Bank CDM deposit");
   const [note, setNote] = useState("");
@@ -61,12 +62,17 @@ export default function SendMoneyPage() {
   const [success, setSuccess] = useState("");
 
   const destination = destinations.find((item) => item.country === country) ?? destinations[0];
-  const payoutOptions = useMemo(
-    () => country === "India"
-      ? ["Bank transfer", "UPI transfer", "Cash pickup"]
-      : ["Bank account", "Cash pickup"],
-    [country]
-  );
+  const payoutOptionsByCountry: Record<string, string[]> = {
+    India: ["Bank transfer", "UPI transfer", "Wallet: Paytm Wallet", "Cash pickup"],
+    Pakistan: ["Bank transfer", "Wallet: Easypaisa", "Wallet: JazzCash", "Cash pickup"],
+    Nepal: ["Bank transfer", "Wallet: eSewa", "Wallet: Khalti", "Cash pickup"],
+    Bangladesh: ["Bank transfer", "Wallet: bKash", "Wallet: Nagad", "Wallet: Rocket", "Cash pickup"],
+    Egypt: ["Bank transfer", "Wallet: Vodafone Cash", "Wallet: Orange Cash", "Wallet: Etisalat Cash", "Cash pickup"],
+    Philippines: ["Bank transfer", "Wallet: GCash", "Wallet: Maya", "Cash pickup"],
+    "Sri Lanka": ["Bank transfer", "Wallet: eZ Cash", "Wallet: mCash", "Cash pickup"],
+  };
+  const payoutOptions = payoutOptionsByCountry[country] ?? ["Bank transfer", "Cash pickup"];
+  const isWalletPayout = selectedPayout.startsWith("Wallet:");
   const selectedPayout = payoutOptions.includes(payout) ? payout : payoutOptions[0];
   const numericAmount = Number(amount);
   const referenceRate = rates[destination.currency];
@@ -189,12 +195,16 @@ export default function SendMoneyPage() {
       setError("Enter the recipient UPI ID.");
       return;
     }
-    if (selectedPayout !== "Cash pickup" && selectedPayout !== "UPI transfer") {
+    if (isWalletPayout && !walletNumber.trim()) {
+      setError("Enter the recipient's mobile wallet number.");
+      return;
+    }
+    if (selectedPayout !== "Cash pickup" && selectedPayout !== "UPI transfer" && !isWalletPayout) {
       if (!bankName.trim() || !accountName.trim() || !accountNumber.trim() || !bankBranch.trim() || !bankCity.trim()) {
         setError("Enter the recipient bank name, account holder name, account number, branch and city.");
         return;
       }
-      if (!ifsc.trim()) {
+      if (country === "India" && !ifsc.trim()) {
         setError("Enter the recipient bank IFSC code.");
         return;
       }
@@ -219,6 +229,7 @@ export default function SendMoneyPage() {
           recipient_bank_city: bankCity.trim() || null,
           recipient_bank_branch_code: bankBranchCode.trim() || null,
           recipient_upi_id: upiId.trim() || null,
+          recipient_wallet_number: walletNumber.trim() || null,
           payout_method: selectedPayout,
           funding_method: funding,
           reference_rate: referenceRate ?? null,
@@ -257,6 +268,7 @@ export default function SendMoneyPage() {
       setBankBranch("");
       setBankCity("");
       setUpiId("");
+      setWalletNumber("");
       setNote("");
     } catch (err) {
       console.error("Unexpected DirhamLink transaction error:", err);
@@ -292,7 +304,17 @@ export default function SendMoneyPage() {
               onChange={(event) => {
                 const nextCountry = event.target.value;
                 setCountry(nextCountry);
-                setPayout(nextCountry === "India" ? "Bank transfer" : "Bank account");
+                setPayout("Bank transfer");
+                setWalletNumber("");
+                setUpiId("");
+                setBankName("");
+                setAccountName("");
+                setAccountNumber("");
+                setIfsc("");
+                setBankBranch("");
+                setBankCity("");
+                setBankBranchCode("");
+                setBranchSearch("");
               }}
             >
               {destinations.map((item) => (
@@ -396,13 +418,19 @@ export default function SendMoneyPage() {
           </label>
 
           <label>
-            How should the recipient receive the money?
+            Payout option
             <select value={selectedPayout} onChange={(event) => setPayout(event.target.value)}>
               {payoutOptions.map((option) => <option key={option} value={option}>{option}</option>)}
             </select>
           </label>
+          <p className="auth-disclaimer">These are payout preferences for your request only. Availability, provider support, recipient eligibility, fees and final currency are subject to confirmation by DirhamLink staff. Selecting an option does not mean a payout partner is connected or that payment is guaranteed.</p>
 
-          {selectedPayout === "Bank transfer" || selectedPayout === "Bank account" ? (
+          {isWalletPayout ? (
+            <label>
+              {selectedPayout.replace("Wallet: ", "")} mobile number
+              <input value={walletNumber} onChange={(event) => setWalletNumber(event.target.value)} maxLength={40} autoComplete="off" placeholder="Enter wallet-registered mobile number" required />
+            </label>
+          ) : selectedPayout === "Bank transfer" || selectedPayout === "Bank account" ? (
             <>
               <label>
                 Search or enter recipient bank name
