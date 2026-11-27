@@ -228,7 +228,7 @@ export default function SendMoneyPage() {
           Create and track your transfer on DirhamLink. Your transaction receives a unique reference when it is saved.
         </p>
         <div className="account-notice">
-          Transaction records are available online. Creating a record does not lock an exchange rate, confirm receipt of funds, approve compliance, or send money. Wait for verified instructions from DirhamLink before depositing cash.
+          Transaction records are available online. Creating a record does not lock an exchange rate, confirm receipt of funds, approve compliance, or send money. The 5-hour period is an estimated service target, not a guarantee. If the transfer is not credited to the recipient’s bank account within the stated timeframe, contact our support team with your transaction reference. Wait for verified instructions from DirhamLink before depositing cash.
         </div>
 
         <form className="auth-form" onSubmit={submit}>
@@ -383,7 +383,7 @@ export default function SendMoneyPage() {
         </form>
 
         <p className="auth-disclaimer">
-          Do not deposit money until DirhamLink staff have verified your transaction and issued approved instructions. Uploading a receipt alone is not proof that funds have been received. Payout is not yet automated.
+          Do not deposit money until DirhamLink has verified your transaction and issued approved instructions. Uploading a receipt alone is not proof that funds have been received. Payout is not yet automated. If the recipient’s bank account has not been credited within the stated timeframe, contact our support team with your transaction reference.
         </p>
         <Link className="auth-home" href="/account">← Back to dashboard</Link>
       </section>
