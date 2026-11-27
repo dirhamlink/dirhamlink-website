@@ -133,6 +133,12 @@ export default function Home() {
         <div className="container footer-row">
           <a className="brand" href="#"><span className="brand-mark">D</span><span style={{ color: "#fff" }}>DirhamLink</span></a>
           <p className="footer-note">DirhamLink provides information and remittance inquiry assistance. Displayed rates are indicative only and are not executable offers. Transfers are subject to confirmation, funding verification, eligibility, compliance checks and processing by the authorised service provider. The stated 5-hour period is an estimated service target, not a guarantee of credit. If the transfer has not been credited to the recipient’s bank account within the stated timeframe, please contact our support team.</p>
+          <div className="footer-note">
+            <strong>Customer support</strong><br />
+            Arshdeep Singh · DirhamLink team<br />
+            Email: <a href="mailto:deepdxb2004@gmail.com">deepdxb2004@gmail.com</a><br />
+            WhatsApp: <a href="https://wa.me/971541797541" target="_blank" rel="noreferrer">+971 54 179 7541</a>
+          </div>
           <a href="/terms-and-conditions" className="footer-note">Terms and Conditions</a>
         </div>
       </footer>
