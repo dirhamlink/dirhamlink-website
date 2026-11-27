@@ -9,9 +9,9 @@ import { DESTINATION_BANKS } from "../../lib/banks/destination-banks";
 type Beneficiary = {
  id:string; destination_country:string; recipient_full_name:string; payout_method:string;
  bank_name:string|null; account_name:string|null; account_number:string|null;
- ifsc:string|null; bank_branch:string|null; bank_city:string|null; upi_id:string|null;
+ ifsc:string|null; bank_branch:string|null; bank_city:string|null; bank_branch_code?:string|null; upi_id:string|null;
 };
-const countries=["India","Pakistan","Nepal","Bangladesh","Egypt","Philippines","Sri Lanka"];
+const countries=["India","Pakistan","Nepal","Bangladesh","Egypt","Philippines","Sri Lanka"];\ntype BranchOption={id:string;bank_name:string;city:string|null;district:string|null;branch_name:string;branch_code:string|null;ifsc:string|null};
 export default function BeneficiariesPage(){
  const router=useRouter();
  const [rows,setRows]=useState<Beneficiary[]>([]);
@@ -24,7 +24,7 @@ export default function BeneficiariesPage(){
  const [number,setNumber]=useState("");
  const [ifsc,setIfsc]=useState("");
  const [branch,setBranch]=useState("");
- const [city,setCity]=useState("");
+ const [city,setCity]=useState("");\n const [branchOptions,setBranchOptions]=useState<BranchOption[]>([]);\n const [branchSearch,setBranchSearch]=useState("");\n const [branchDirectoryMessage,setBranchDirectoryMessage]=useState("");\n const [branchCode,setBranchCode]=useState("");
  const [upi,setUpi]=useState("");
  const [editing,setEditing]=useState<string|null>(null);
  const [loading,setLoading]=useState(true);
@@ -39,14 +39,14 @@ export default function BeneficiariesPage(){
   if(error)setError(error.message); else setRows((data??[]) as Beneficiary[]);
   setLoading(false);
  }
- useEffect(()=>{void load();},[]);
+ useEffect(()=>{void load();},[]);\n useEffect(()=>{\n  let active=true;\n  async function loadBranches(){\n   setBranchOptions([]);setBranchDirectoryMessage("");\n   if(!bank.trim()||!["India","Nepal","Pakistan"].includes(country))return;\n   const {data,error}=await supabase.from("bank_branches").select("id,bank_name,city,district,branch_name,branch_code,ifsc").eq("country",country).eq("bank_name",bank.trim()).eq("is_active",true).order("city",{ascending:true}).limit(500);\n   if(!active)return;\n   if(error){setBranchDirectoryMessage("Branch directory is not available yet. Please enter branch and city manually.");return;}\n   setBranchOptions((data??[]) as BranchOption[]);\n   if(!data?.length)setBranchDirectoryMessage("No imported branch records for this bank yet. Please enter branch and city manually.");\n  }\n  void loadBranches();return()=>{active=false;};\n },[country,bank]);
  function reset(){
-  setEditing(null);setName("");setBank("");setHolder("");setNumber("");setIfsc("");setBranch("");setCity("");setUpi("");
+  setEditing(null);setName("");setBank("");setHolder("");setNumber("");setIfsc("");setBranch("");setCity("");setBranchCode("");setBranchSearch("");setUpi("");
  }
  function edit(row:Beneficiary){
   setEditing(row.id);setCountry(row.destination_country);setName(row.recipient_full_name);setMethod(row.payout_method);
   setBank(row.bank_name??"");setHolder(row.account_name??"");setNumber(row.account_number??"");setIfsc(row.ifsc??"");
-  setBranch(row.bank_branch??"");setCity(row.bank_city??"");setUpi(row.upi_id??"");setError("");setSuccess("");
+  setBranch(row.bank_branch??"");setCity(row.bank_city??"");setBranchCode(row.bank_branch_code??"");setBranchSearch(row.bank_branch??"");setUpi(row.upi_id??"");setError("");setSuccess("");
  }
  async function save(e:FormEvent){
   e.preventDefault();setError("");setSuccess("");
@@ -56,7 +56,7 @@ export default function BeneficiariesPage(){
   setSaving(true);
   const payload={customer_id:userId,destination_country:country,recipient_full_name:name.trim(),payout_method:method,
    bank_name:bank.trim()||null,account_name:holder.trim()||null,account_number:number.trim()||null,
-   ifsc:ifsc.trim()||null,bank_branch:branch.trim()||null,bank_city:city.trim()||null,upi_id:upi.trim()||null,updated_at:new Date().toISOString()};
+   ifsc:ifsc.trim()||null,bank_branch:branch.trim()||null,bank_city:city.trim()||null,bank_branch_code:branchCode.trim()||null,upi_id:upi.trim()||null,updated_at:new Date().toISOString()};
   const result=editing
    ? await supabase.from("beneficiaries").update(payload).eq("id",editing)
    : await supabase.from("beneficiaries").insert(payload);
