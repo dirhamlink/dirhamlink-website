@@ -29,7 +29,7 @@ export default function Home() {
           </nav>
           <div className="nav-actions">
             <a className="btn btn-outline" href="#calculator">Calculate</a>
-            <a className="btn btn-outline" href="/login">Log in</a>
+            <a className="btn btn-login" href="/login">Log in</a>
             <a className="btn btn-primary" href="/register">Register</a>
           </div>
         </div>
