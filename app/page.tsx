@@ -111,7 +111,7 @@ export default function Home() {
             </div>
             <div className="country-grid">
               {destinations.map((country) => (
-                <div className="country-chip" key={country.name}><span className="flag">{country.flag}</span>{country.name}</div>
+                <a className="country-chip" key={country.name} href={`/destinations/${country.name.toLowerCase()}`}><span className="flag">{country.flag}</span>{country.name}<small className="country-explore">Explore country ↗</small></a>
               ))}
               {moreCountries.map(([flag, name]) => (
                 <div className="country-chip" key={name}><span className="flag">{flag}</span>{name}</div>
