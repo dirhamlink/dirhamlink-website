@@ -54,6 +54,7 @@ export default function TeamPortalPage() {
   const [clockNow, setClockNow] = useState(Date.now());
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [completionError, setCompletionError] = useState("");
+  const [payoutReceipts, setPayoutReceipts] = useState<Record<string, File | null>>({});
 
   useEffect(() => {
     let active = true;
@@ -104,13 +105,38 @@ export default function TeamPortalPage() {
 
   async function markCompleted(transfer: TeamTransfer) {
     if (transfer.status === "payout_confirmed" || completingId) return;
+    const receipt = payoutReceipts[transfer.id];
+    if (!receipt) {
+      setCompletionError("Attach the actual bank or payout confirmation receipt before marking this transfer completed.");
+      return;
+    }
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!allowedTypes.includes(receipt.type) || receipt.size > 5 * 1024 * 1024) {
+      setCompletionError("Receipt must be JPG, PNG, WebP or PDF and no larger than 5 MB.");
+      return;
+    }
     const confirmed = window.confirm(
-      `Only continue if AED ${Number(transfer.send_amount_aed).toFixed(2)} has actually been paid out and the recipient credit has been independently verified. Mark ${transfer.transaction_reference} as completed?`
+      `Only continue after independently verifying that AED ${Number(transfer.send_amount_aed).toFixed(2)} was actually paid out and credited to the recipient. You must attach genuine payout evidence. Mark ${transfer.transaction_reference} as completed?`
     );
     if (!confirmed) return;
     setCompletionError("");
     setCompletingId(transfer.id);
     try {
+      const safeName = receipt.name.replace(/[^a-zA-Z0-9._-]/g, "_");
+      const receiptPath = `${transfer.id}/${crypto.randomUUID()}-${safeName}`;
+      const { error: uploadError } = await supabase.storage
+        .from("payout-transfer-receipts")
+        .upload(receiptPath, receipt, { contentType: receipt.type, upsert: false });
+      if (uploadError) throw uploadError;
+
+      const { error: recordError } = await supabase.from("transfer_payout_receipts").insert({
+        transfer_id: transfer.id,
+        customer_id: transfer.customer_id,
+        receipt_path: receiptPath,
+        uploaded_by: (await supabase.auth.getUser()).data.user?.id,
+      });
+      if (recordError) throw recordError;
+
       const { data, error: rpcError } = await supabase.rpc("mark_dirhamlink_transfer_completed", {
         p_transfer_id: transfer.id,
       });
@@ -119,8 +145,9 @@ export default function TeamPortalPage() {
         ? { ...item, status: "payout_confirmed", completion_reference: typeof data === "string" ? data : item.completion_reference }
         : item
       ));
+      setPayoutReceipts((current) => ({ ...current, [transfer.id]: null }));
     } catch (err) {
-      setCompletionError(err instanceof Error ? err.message : "Could not update the transaction. Check the database migration and try again.");
+      setCompletionError(err instanceof Error ? err.message : "Could not upload the receipt or complete the transaction. Check the database migration and try again.");
     } finally {
       setCompletingId(null);
     }
@@ -134,7 +161,7 @@ export default function TeamPortalPage() {
   return (
     <main className="auth-page team-page">
       <section className="auth-card dashboard-card team-card">
-        <Link className="brand auth-brand" href="/"><span className="brand-mark">D</span>DirhamLink</Link>
+        <Link className="brand auth-brand" href="/"><span className="brand-mark">↔</span>DirhamLink</Link>
         <p className="eyebrow auth-eyebrow">Restricted staff access</p>
         <h1>Team transaction portal</h1>
         <p className="auth-intro">Signed in as <strong>{email}</strong>. This portal is for authorised staff only.</p>
@@ -180,6 +207,20 @@ export default function TeamPortalPage() {
                 <p className="team-warning">Reference rate is indicative only. The 5-hour countdown is a target from submission, not proof that funds have been received or paid out.</p>
                 {row.status !== "payout_confirmed" && row.status !== "rejected" && row.status !== "cancelled" && <div className="account-notice"><strong>5-hour target: </strong>{Math.max(0, 5 * 60 * 60 * 1000 - (clockNow - new Date(row.created_at).getTime())) > 0 ? (() => { const ms = Math.max(0, 5 * 60 * 60 * 1000 - (clockNow - new Date(row.created_at).getTime())); const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); const s = Math.floor((ms % 60000) / 1000); return `${h}h ${m}m ${s}s remaining`; })() : "Target window elapsed — follow up with the payout partner."}</div>}
 
+                {row.status !== "payout_confirmed" && row.status !== "rejected" && row.status !== "cancelled" && (
+                  <div className="account-notice" style={{ marginTop: 12 }}>
+                    <strong>Attach payout confirmation receipt (required)</strong>
+                    <p>Upload the genuine bank / payout partner confirmation showing the completed transfer. JPG, PNG, WebP or PDF, maximum 5 MB. The customer can view it after completion is recorded.</p>
+                    <input
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp,application/pdf"
+                      onChange={(event) => setPayoutReceipts((current) => ({ ...current, [row.id]: event.target.files?.[0] ?? null }))}
+                      disabled={completingId !== null}
+                      aria-label={`Payout receipt for ${row.transaction_reference}`}
+                    />
+                    {payoutReceipts[row.id] && <small>Selected: {payoutReceipts[row.id]?.name}</small>}
+                  </div>
+                )}
                 {row.status === "payout_confirmed" ? (
                   <p className="auth-success">Payout confirmed — marked by authorised team staff.</p>
                 ) : row.status !== "rejected" && row.status !== "cancelled" ? (
@@ -190,7 +231,7 @@ export default function TeamPortalPage() {
                     disabled={completingId !== null}
                     aria-label={`Mark ${row.transaction_reference} as completed`}
                   >
-                    {completingId === row.id ? "Updating transaction…" : "Mark transaction completed"}
+                    {completingId === row.id ? "Updating transaction…" : "Upload receipt & mark completed"}
                   </button>
                 ) : null}
               </article>;
