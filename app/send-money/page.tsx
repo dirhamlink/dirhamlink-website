@@ -19,7 +19,7 @@ type RatesResponse = {
   rates?: Record<string, number>;
   source?: string;
   timestamp?: number | null;
-  data_updated_at?: number | null;
+  data_updated_at?: number | string | null;
   delayed_minutes?: number;
   error?: string;
 };
@@ -30,7 +30,7 @@ export default function SendMoneyPage() {
   const [country, setCountry] = useState("India");
   const [amount, setAmount] = useState("");
   const [recipient, setRecipient] = useState("");
-  const [payout, setPayout] = useState("Bank account");
+  const [payout, setPayout] = useState("Bank transfer");
   const [funding, setFunding] = useState("Bank CDM deposit");
   const [note, setNote] = useState("");
   const [rates, setRates] = useState<Record<string, number>>({});
@@ -42,6 +42,9 @@ export default function SendMoneyPage() {
   const [success, setSuccess] = useState("");
 
   const destination = destinations.find(item => item.country === country) ?? destinations[0];
+  const payoutOptions = country === "India"
+    ? ["Bank transfer", "UPI transfer", "Cash pickup"]
+    : ["Bank account", "Cash pickup"];
   const numericAmount = Number(amount);
   const referenceRate = rates[destination.currency];
   const estimatedPayout = Number.isFinite(numericAmount) && numericAmount > 0 && referenceRate
@@ -65,7 +68,11 @@ export default function SendMoneyPage() {
         if (active) {
           setRates(data.rates);
           setRateSource(data.source || "Market reference provider");
-          setRateUpdatedAt(data.data_updated_at ?? data.timestamp ?? null);
+          const rawUpdatedAt = data.data_updated_at ?? data.timestamp ?? null;
+          const parsedUpdatedAt = typeof rawUpdatedAt === "number"
+            ? rawUpdatedAt
+            : rawUpdatedAt ? Date.parse(rawUpdatedAt) / 1000 : null;
+          setRateUpdatedAt(parsedUpdatedAt && Number.isFinite(parsedUpdatedAt) ? parsedUpdatedAt : null);
           setRateError("");
         }
       } catch (err) {
@@ -138,7 +145,7 @@ export default function SendMoneyPage() {
             <input value={recipient} onChange={e => setRecipient(e.target.value)} minLength={2} maxLength={120} autoComplete="name" placeholder="Name of the person receiving money" required />
           </label>
           <label>How should the recipient receive the money?
-            <select value={payout} onChange={e => setPayout(e.target.value)}><option>Bank account</option><option>Cash pickup</option></select>
+            <select value={payoutOptions.includes(payout) ? payout : payoutOptions[0]} onChange={e => setPayout(e.target.value)}>{payoutOptions.map(option => <option key={option}>{option}</option>)}</select>
           </label>
           <label>Planned funding method
             <select value={funding} onChange={e => setFunding(e.target.value)}><option>Bank CDM deposit</option><option>Office cash deposit</option><option>Cash pickup arrangement</option></select>
