@@ -52,6 +52,8 @@ export default function TeamPortalPage() {
   const [error, setError] = useState("");
   const [search, setSearch] = useState("");
   const [clockNow, setClockNow] = useState(Date.now());
+  const [completingId, setCompletingId] = useState<string | null>(null);
+  const [completionError, setCompletionError] = useState("");
 
   useEffect(() => {
     let active = true;
@@ -100,6 +102,30 @@ export default function TeamPortalPage() {
     ].some((value) => value?.toLowerCase().includes(q));
   });
 
+  async function markCompleted(transfer: TeamTransfer) {
+    if (transfer.status === "payout_confirmed" || completingId) return;
+    const confirmed = window.confirm(
+      `Only continue if AED ${Number(transfer.send_amount_aed).toFixed(2)} has actually been paid out and the recipient credit has been independently verified. Mark ${transfer.transaction_reference} as completed?`
+    );
+    if (!confirmed) return;
+    setCompletionError("");
+    setCompletingId(transfer.id);
+    try {
+      const { data, error: rpcError } = await supabase.rpc("mark_dirhamlink_transfer_completed", {
+        p_transfer_id: transfer.id,
+      });
+      if (rpcError) throw rpcError;
+      setRows((current) => current.map((item) => item.id === transfer.id
+        ? { ...item, status: "payout_confirmed", completion_reference: typeof data === "string" ? data : item.completion_reference }
+        : item
+      ));
+    } catch (err) {
+      setCompletionError(err instanceof Error ? err.message : "Could not update the transaction. Check the database migration and try again.");
+    } finally {
+      setCompletingId(null);
+    }
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     router.replace("/login");
@@ -115,6 +141,7 @@ export default function TeamPortalPage() {
         {loading && <div className="account-notice">Loading secure team transactions…</div>}
         {error && <div className="auth-error" role="alert">{error}</div>}
         {!loading && !error && <>
+          {completionError && <div className="auth-error" role="alert">{completionError}</div>}
           <div className="team-toolbar">
             <div><strong>{rows.length}</strong><small> recent transactions</small></div>
             <input aria-label="Search transactions" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search reference, recipient or country" />
@@ -152,7 +179,19 @@ export default function TeamPortalPage() {
                 <p className="team-warning">Reference rate is indicative only. The 5-hour countdown is a target from submission, not proof that funds have been received or paid out.</p>
                 {row.status !== "payout_confirmed" && row.status !== "rejected" && row.status !== "cancelled" && <div className="account-notice"><strong>5-hour target: </strong>{Math.max(0, 5 * 60 * 60 * 1000 - (clockNow - new Date(row.created_at).getTime())) > 0 ? (() => { const ms = Math.max(0, 5 * 60 * 60 * 1000 - (clockNow - new Date(row.created_at).getTime())); const h = Math.floor(ms / 3600000); const m = Math.floor((ms % 3600000) / 60000); const s = Math.floor((ms % 60000) / 1000); return `${h}h ${m}m ${s}s remaining`; })() : "Target window elapsed — follow up with the payout partner."}</div>}
 
-                {row.status === "payout_confirmed" && <p className="auth-success">Payout confirmed</p>}
+                {row.status === "payout_confirmed" ? (
+                  <p className="auth-success">Payout confirmed — marked by authorised team staff.</p>
+                ) : row.status !== "rejected" && row.status !== "cancelled" ? (
+                  <button
+                    type="button"
+                    className="btn btn-primary auth-submit"
+                    onClick={() => void markCompleted(row)}
+                    disabled={completingId !== null}
+                    aria-label={`Mark ${row.transaction_reference} as completed`}
+                  >
+                    {completingId === row.id ? "Updating transaction…" : "Mark transaction completed"}
+                  </button>
+                ) : null}
               </article>;
             })}
           </div>
