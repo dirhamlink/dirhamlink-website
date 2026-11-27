@@ -420,14 +420,18 @@ export default function SendMoneyPage() {
           <label>
             Payout option
             <select value={selectedPayout} onChange={(event) => setPayout(event.target.value)}>
-              {payoutOptions.map((option) => <option key={option} value={option}>{option}</option>)}
+              {payoutOptions.map((option) => (
+                <option key={option} value={option}>
+                  {option.startsWith("Wallet:") ? "📱 " + option.replace("Wallet: ", "") : option === "Cash pickup" ? "💵 Cash pickup" : option === "UPI transfer" ? "📲 UPI transfer" : "🏦 " + option}
+                </option>
+              ))}
             </select>
           </label>
           <p className="auth-disclaimer">Receiving currency: <strong>{destination.currency}</strong>. These are payout preferences for your request only. Availability, provider support, recipient eligibility, fees and final currency are subject to confirmation by DirhamLink staff. Selecting an option does not mean a payout partner is connected or that payment is guaranteed.</p>
 
           {isWalletPayout ? (
             <label>
-              {selectedPayout.replace("Wallet: ", "")} mobile number
+              📱 {selectedPayout.replace("Wallet: ", "")} mobile wallet number
               <input value={walletNumber} onChange={(event) => setWalletNumber(event.target.value)} maxLength={40} autoComplete="off" placeholder="Enter wallet-registered mobile number" required />
             </label>
           ) : selectedPayout === "Bank transfer" || selectedPayout === "Bank account" ? (
