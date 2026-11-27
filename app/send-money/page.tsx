@@ -204,7 +204,7 @@ export default function SendMoneyPage() {
           destination_currency: destination.currency,
           send_amount_aed: numericAmount,
           recipient_full_name: recipient.trim(),
-          customer_mobile: customerMobile.trim(),
+          customer_mobile: "+971" + customerMobile,
           recipient_bank_name: bankName.trim() || null,
           recipient_bank_account_name: accountName.trim() || null,
           recipient_bank_account_number: accountNumber.trim() || null,
