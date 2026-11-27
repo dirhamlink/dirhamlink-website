@@ -1,40 +1,38 @@
 # DirhamLink
 
-**Your Money. Your Destination.**
+Responsive UAE remittance enquiry website MVP, built with plain HTML, CSS and JavaScript for GitHub Pages.
 
-DirhamLink is a UAE-based remittance information and inquiry platform. Customers can explore indicative exchange-rate information, estimate a recipient amount, and submit an inquiry for follow-up by the team.
+## Included
+- Customer landing page and UAE branding
+- Destination selector for India, Pakistan, Nepal, Bangladesh, Egypt and the Philippines
+- AED currency conversion interface
+- Enquiry form layout and browser-side validation
+- Mobile-responsive layout
+- Exchange-rate configuration in rates.json
 
-## Current foundation
+## Important: front-end preview only
+There is no secure backend yet. The enquiry form deliberately does **not** transmit or save personal details. Exchange rates are intentionally blank until verified values are provided. Do not enter real customer data or publish unverified rates.
 
-- Responsive homepage and DirhamLink branding
-- Destination overview for India, Pakistan, Nepal, Bangladesh, Egypt and the Philippines
-- Indicative-rate display clearly marked as demonstration data
-- Interactive AED-to-destination-currency calculator using demonstration values
-- Compliance-aware wording: the site does not execute money transfers or treat an inquiry as a completed transfer
+This website does not accept funds, execute transfers or verify customers. Actual transfers, customer verification and compliance must be handled through an appropriately authorised provider and in accordance with applicable UAE requirements.
 
-## Important before launch
+## Preview locally
+Open the repository with a local web server (for example, VS Code Live Server). The rate configuration is loaded using fetch, so opening index.html directly with a file URL may prevent it from loading.
 
-The rates currently shown are **sample values only**. They are not live, approved selling rates and must not be used to quote or execute a transfer. Replace them with a properly sourced market reference feed and an administrator-controlled, approved selling-rate workflow before publishing real rates.
+## Configure indicative rates
+Edit rates.json only after receiving verified, approved rates from the authorised provider. Set each rate to the approved number of destination-currency units per 1 AED. Set status to active only when values are approved and current, and set updatedAt to an ISO 8601 timestamp. Establish an update and expiry process before launch.
 
-This starter homepage does not yet include customer authentication, customer records, deposit-slip uploads, bank reconciliation, staff/admin dashboards, or production inquiry storage. Those require a secure database, identity provider, private file storage, authorization controls, audit logging and operational review.
+## Before accepting real enquiries
+1. Connect a private backend/API for form submission. Never store names, phone numbers, recipient data or identity documents in this public repository or browser local storage.
+2. Add server-side validation, rate limiting, spam protection, access controls, audit logs and a retention/deletion policy.
+3. Confirm privacy notice, consent wording, terms, complaints process and applicable UAE regulatory obligations with qualified advisers and the authorised provider.
+4. Implement staff authentication and role-based access for any administration dashboard. Never put API keys, passwords or provider secrets in frontend files.
+5. Connect an approved rate source and server-side margin/approval workflow. Display timestamps, fees and expiry clearly.
+6. Test accessibility, mobile layouts, security and the complete enquiry lifecycle before launch.
 
-Never commit API keys, OAuth secrets, customer information, bank details, deposit receipts or production environment files to this repository.
+## Deploy with GitHub Pages
+1. Open repository Settings → Pages.
+2. Under Build and deployment, choose Deploy from a branch.
+3. Select branch main and folder /(root), then save.
+4. Wait for GitHub Pages to publish. The URL is normally https://dirhamlink.github.io/dirhamlink-website/.
 
-## Local development
-
-Requires Node.js 20 or newer.
-
-```bash
-npm install
-npm run dev
-```
-
-Open http://localhost:3000.
-
-## Production safeguards
-
-- Transfers must be handled by the appropriately authorized service provider.
-- Uploaded deposit receipts are not proof that funds have reached the company bank account.
-- Bank verification must be completed by authorized staff after independent reconciliation.
-- Displayed rates must be timestamped, have an expiry/staleness policy and require approval before publication.
-- Disclose that waived transfer fees do not necessarily waive exchange-rate margins, partner charges or other applicable fees.
+The public website is a preview until secure enquiry delivery and all required operational approvals are completed.
