@@ -17,6 +17,7 @@ const destinations = [
 
 type RatesResponse = {
   rates?: Record<string, number>;
+  customer_rates?: Record<string, number>;
   source?: string;
   timestamp?: number | null;
   data_updated_at?: number | string | null;
@@ -41,6 +42,7 @@ export default function SendMoneyPage() {
   const [funding, setFunding] = useState("Bank CDM deposit");
   const [note, setNote] = useState("");
   const [rates, setRates] = useState<Record<string, number>>({});
+  const [customerRates, setCustomerRates] = useState<Record<string, number>>({});
   const [rateSource, setRateSource] = useState("");
   const [rateUpdatedAt, setRateUpdatedAt] = useState<number | null>(null);
   const [rateError, setRateError] = useState("");
@@ -58,9 +60,10 @@ export default function SendMoneyPage() {
   const selectedPayout = payoutOptions.includes(payout) ? payout : payoutOptions[0];
   const numericAmount = Number(amount);
   const referenceRate = rates[destination.currency];
+  const customerRate = customerRates[destination.currency] ?? referenceRate;
   const estimatedPayout =
     Number.isFinite(numericAmount) && numericAmount > 0 && referenceRate
-      ? numericAmount * referenceRate
+      ? numericAmount * customerRate
       : null;
 
   useEffect(() => {
@@ -86,6 +89,7 @@ export default function SendMoneyPage() {
         }
         if (!active) return;
         setRates(data.rates);
+        setCustomerRates(data.customer_rates ?? data.rates);
         setRateSource(data.source || "Market reference provider");
         const rawUpdatedAt = data.data_updated_at ?? data.timestamp ?? null;
         const parsedUpdatedAt = typeof rawUpdatedAt === "number"
@@ -168,6 +172,7 @@ export default function SendMoneyPage() {
           payout_method: selectedPayout,
           funding_method: funding,
           reference_rate: referenceRate ?? null,
+          customer_rate: customerRate ?? null,
           rate_source: referenceRate ? rateSource : null,
           rate_captured_at: referenceRate ? new Date().toISOString() : null,
           customer_note: note.trim() || null,
@@ -261,7 +266,7 @@ export default function SendMoneyPage() {
           </label>
 
           <div className="calc-result">
-            <small>Indicative market reference estimate</small>
+            <small>Indicative DirhamLink customer estimate</small>
             <strong>
               {estimatedPayout !== null
                 ? estimatedPayout.toLocaleString(undefined, { maximumFractionDigits: 2 }) + " " + destination.currency
@@ -269,10 +274,10 @@ export default function SendMoneyPage() {
             </strong>
             <small>
               {referenceRate
-                ? "1 AED = " + referenceRate + " " + destination.currency
+                ? "Market: 1 AED = " + referenceRate + " " + destination.currency + (destination.currency === "INR" ? " · DirhamLink: 1 AED = " + customerRate + " INR" : "")
                 : rateError || "Waiting for the rate provider."}
             </small>
-            <small>Not a confirmed DirhamLink selling rate. Final rate and fees require staff confirmation.</small>
+            <small>India rate includes INR 1 extra per AED over the market reference where applicable. Indicative only; final rate and fees require staff confirmation.</small>
             {rateUpdatedAt !== null && (
               <small>
                 Provider: {rateSource || "Market reference"} · Updated: {new Date(rateUpdatedAt * 1000).toLocaleString()}
