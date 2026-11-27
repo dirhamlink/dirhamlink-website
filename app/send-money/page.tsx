@@ -82,7 +82,13 @@ export default function SendMoneyPage() {
       const { data, error: authError } = await supabase.auth.getUser();
       if (!active) return;
       if (authError || !data.user) router.replace("/login");
-      else setUserId(data.user.id);
+      else {
+        setUserId(data.user.id);
+        const savedPhone = String(data.user.user_metadata?.phone ?? data.user.user_metadata?.mobile ?? data.user.phone ?? "");
+        const digits = savedPhone.replace(/\D/g, "");
+        const local = digits.startsWith("971") ? digits.slice(3) : digits;
+        if (local.length === 9) setCustomerMobile(local);
+      }
     }
     void checkSession();
     return () => { active = false; };
@@ -171,8 +177,8 @@ export default function SendMoneyPage() {
       setError("Enter an amount between AED 1 and AED 100,000.");
       return;
     }
-    if (!customerMobile.trim() || customerMobile.replace(/[\s()+-]/g, "").length < 7) {
-      setError("Enter a valid mobile number with country code so our team can contact you.");
+    if (!/^5\d{8}$/.test(customerMobile)) {
+      setError("Enter exactly 9 UAE mobile digits, starting with 5. The +971 prefix is added automatically.");
       return;
     }
     if (recipient.trim().length < 2) {
@@ -333,17 +339,20 @@ export default function SendMoneyPage() {
           </div>
 
           <label>
-            Your mobile number (with country code)
-            <input
+            Your UAE mobile number
+            <div className="mobile-input-row"><span className="mobile-prefix">+971</span><input
               type="tel"
-              inputMode="tel"
+              inputMode="numeric"
               value={customerMobile}
-              onChange={(event) => setCustomerMobile(event.target.value)}
-              autoComplete="tel"
-              maxLength={25}
-              placeholder="e.g. +971 5X XXX XXXX"
+              onChange={(event) => setCustomerMobile(event.target.value.replace(/\D/g, "").slice(0, 9))}
+              autoComplete="tel-national"
+              maxLength={9}
+              minLength={9}
+              pattern="5[0-9]{8}"
+              placeholder="5XXXXXXXX"
               required
-            />
+            /></div>
+            <small>Enter 9 digits only, starting with 5. +971 is added automatically.</small>
           </label>
 
           {beneficiaries.length > 0 && <label>
