@@ -95,18 +95,18 @@ export default function AccountPage() {
             <small>Create a transaction and receive a reference</small>
             <span className="dashboard-action">Start now</span>
           </Link>
-          <div className="dashboard-tile dashboard-disabled">
+          <Link className="dashboard-tile" href="/beneficiaries">
             <span className="dashboard-icon">▤</span>
             <strong>Beneficiaries</strong>
-            <small>Saved recipients will be added in the next stage</small>
-            <span className="dashboard-coming">In development</span>
-          </div>
-          <div className="dashboard-tile dashboard-disabled">
+            <small>Save and manage your recipients securely</small>
+            <span className="dashboard-action">Manage recipients</span>
+          </Link>
+          <Link className="dashboard-tile" href="/cash-deposits">
             <span className="dashboard-icon">▣</span>
             <strong>Cash deposits</strong>
-            <small>Deposit verification workflow is being built</small>
-            <span className="dashboard-coming">In development</span>
-          </div>
+            <small>View deposit instructions and submit receipt evidence</small>
+            <span className="dashboard-action">Submit deposit</span>
+          </Link>
         </div>
 
         <div className="dashboard-section-title">Your transactions</div>
