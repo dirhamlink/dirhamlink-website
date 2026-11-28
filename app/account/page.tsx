@@ -58,6 +58,7 @@ export default function AccountPage() {
       const { data: rows, error: rowsError } = await supabase
         .from("transfers")
         .select("id, transaction_reference, destination_country, send_amount_aed, status, created_at")
+        .eq("customer_id", data.user.id)
         .order("created_at", { ascending: false })
         .limit(10);
       if (!active) return;
