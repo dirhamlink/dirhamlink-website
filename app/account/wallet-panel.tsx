@@ -6,22 +6,33 @@ export default function WalletPanel(){
  const [entries,setEntries]=useState<Entry[]>([]);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
+ const [balance,setBalance]=useState(0);
+ const [depositCount,setDepositCount]=useState(0);
+ const [debitCount,setDebitCount]=useState(0);
  useEffect(()=>{let active=true;(async()=>{
   const {data:auth,error:authError}=await supabase.auth.getUser();
   if(!active)return;
   if(authError||!auth.user){setError("Please sign in to view your wallet.");setLoading(false);return;}
-  const {data,error}=await supabase.from("wallet_ledger").select("id,entry_type,amount_aed,description,created_at").eq("customer_id",auth.user.id).order("created_at",{ascending:false}).limit(100);
+  const [summaryResult,entriesResult]=await Promise.all([
+   supabase.rpc("get_my_wallet_summary"),
+   supabase.from("wallet_ledger").select("id,entry_type,amount_aed,description,created_at").eq("customer_id",auth.user.id).order("created_at",{ascending:false}).limit(100)
+  ]);
   if(!active)return;
-  if(error)setError("Wallet is awaiting database setup.");
-  else setEntries((data??[]) as Entry[]);
+  if(summaryResult.error||entriesResult.error)setError("Wallet is awaiting database setup. Please apply the latest wallet migration.");
+  else {
+   const summary=Array.isArray(summaryResult.data)?summaryResult.data[0]:summaryResult.data;
+   setBalance(Number(summary?.balance_aed??0));
+   setDepositCount(Number(summary?.deposit_credits??0));
+   setDebitCount(Number(summary?.transfer_debits??0));
+   setEntries((entriesResult.data??[]) as Entry[]);
+  }
   setLoading(false);
  })();return()=>{active=false};},[]);
- const balance=entries.reduce((sum,e)=>sum+((["deposit_credit","refund_credit","adjustment_credit"].includes(e.entry_type)?1:-1)*Number(e.amount_aed)),0);
  return <section className="account-notice" style={{marginBottom:18}}>
   <div className="dashboard-section-title">Your DirhamLink wallet</div>
   <p style={{fontSize:13}}>Staff-controlled account balance · only verified funds are available</p>
   <strong style={{fontSize:28}}>AED {balance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2})}</strong>
-  <p><small>{entries.filter(e=>e.entry_type==="deposit_credit").length} verified deposit credits · {entries.filter(e=>e.entry_type==="transfer_debit").length} transfer debits</small></p>
+  <p><small>{depositCount} verified deposit credits · {debitCount} transfer debits</small></p>
   {loading?<p>Loading wallet…</p>:error?<p>{error}</p>:entries.length===0?<p>No wallet transactions yet. Deposits appear here after authorised staff verification.</p>:<div style={{marginTop:12}}>
    <strong>Wallet activity</strong>
    {entries.map(e=><div key={e.id} style={{display:"flex",justifyContent:"space-between",gap:12,padding:"10px 0",borderTop:"1px solid #e5e7eb"}}>
