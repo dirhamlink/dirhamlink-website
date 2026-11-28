@@ -83,9 +83,10 @@ export default async function DestinationPage({ params }: { params: Promise<{ co
           <div className="destination-place-grid">{destination.places.map((place) => <article className="destination-place" key={place.name}><span>📍</span><h3>{place.name}</h3><p>{place.description}</p></article>)}</div>
         </section>
 
-        <section className="destination-two-col">
+        <section className="destination-three-col">
           <article className="destination-section"><span className="destination-eyebrow">Culture</span><h2>Languages</h2><p>{destination.languages}</p></article>
           <article className="destination-section"><span className="destination-eyebrow">Cuisine</span><h2>Popular foods</h2><div className="food-tags">{destination.foods.map((food) => <span key={food}>{food}</span>)}</div></article>
+          <article className="destination-section"><span className="destination-eyebrow">Sport & recreation</span><h2>Popular sports</h2><div className="food-tags">{destination.sports.map((sport) => <span key={sport}>{sport}</span>)}</div></article>
         </section>
 
         <section className="destination-cta"><div><h2>Sending money to {destination.name}?</h2><p>Check the indicative exchange rate or submit a remittance inquiry with DirhamLink.</p></div><Link href="/#rates" className="btn btn-primary">View exchange rates</Link></section>
