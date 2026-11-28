@@ -7,7 +7,10 @@ export default function WalletPanel(){
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
  useEffect(()=>{let active=true;(async()=>{
-  const {data,error}=await supabase.from("wallet_ledger").select("id,entry_type,amount_aed,description,created_at").order("created_at",{ascending:false}).limit(100);
+  const {data:auth,error:authError}=await supabase.auth.getUser();
+  if(!active)return;
+  if(authError||!auth.user){setError("Please sign in to view your wallet.");setLoading(false);return;}
+  const {data,error}=await supabase.from("wallet_ledger").select("id,entry_type,amount_aed,description,created_at").eq("customer_id",auth.user.id).order("created_at",{ascending:false}).limit(100);
   if(!active)return;
   if(error)setError("Wallet is awaiting database setup.");
   else setEntries((data??[]) as Entry[]);
