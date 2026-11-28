@@ -20,9 +20,22 @@ export default function AuthForm({ mode }: AuthFormProps) {
 
   useEffect(() => {
     let active = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (active && data.session) router.replace("/account");
-    });
+    async function checkExistingUser() {
+      // Do not trust a cached browser session after an account has been deleted
+      // from Supabase Auth. Validate it against the Auth server before redirecting.
+      const { data, error } = await supabase.auth.getUser();
+      if (!active) return;
+      if (data.user) {
+        router.replace("/account");
+        return;
+      }
+      // Clear only a definitively invalid local session (e.g. deleted user).
+      // Keep the session intact for transient network/server errors.
+      if (error && (error.status === 401 || error.status === 403)) {
+        await supabase.auth.signOut({ scope: "local" });
+      }
+    }
+    void checkExistingUser();
     return () => { active = false; };
   }, [router]);
 
