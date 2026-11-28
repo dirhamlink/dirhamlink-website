@@ -56,6 +56,8 @@ export default function TeamPortalPage() {
   const [completingId, setCompletingId] = useState<string | null>(null);
   const [completionError, setCompletionError] = useState("");
   const [payoutReceipts, setPayoutReceipts] = useState<Record<string, File | null>>({});
+  const [notificationStatuses, setNotificationStatuses] = useState<Record<string, { email_status: string; whatsapp_status: string }>>({});
+  const [notificationMessages, setNotificationMessages] = useState<Record<string, string>>({});
 
   useEffect(() => {
     let active = true;
@@ -104,6 +106,34 @@ export default function TeamPortalPage() {
     ].some((value) => value?.toLowerCase().includes(q));
   });
 
+  async function dispatchCompletionNotifications(transferId: string) {
+    setNotificationMessages((current) => ({ ...current, [transferId]: "Sending customer notifications…" }));
+    try {
+      const { data: sessionData } = await supabase.auth.getSession();
+      const accessToken = sessionData.session?.access_token;
+      if (!accessToken) throw new Error("Please sign in again to send notifications.");
+      const response = await fetch("/api/notifications", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${accessToken}` },
+        body: JSON.stringify({ transferId }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || "Notification dispatch failed.");
+      if (result.notification) {
+        setNotificationStatuses((current) => ({ ...current, [transferId]: result.notification }));
+        setNotificationMessages((current) => ({
+          ...current,
+          [transferId]: `Email: ${result.notification.email_status}; WhatsApp: ${result.notification.whatsapp_status}`,
+        }));
+      }
+    } catch (err) {
+      setNotificationMessages((current) => ({
+        ...current,
+        [transferId]: err instanceof Error ? err.message : "Notification dispatch could not be started.",
+      }));
+    }
+  }
+
   async function markCompleted(transfer: TeamTransfer) {
     if (transfer.status === "payout_confirmed" || completingId) return;
     const receipt = payoutReceipts[transfer.id];
@@ -142,6 +172,7 @@ export default function TeamPortalPage() {
         p_transfer_id: transfer.id,
       });
       if (rpcError) throw rpcError;
+      void dispatchCompletionNotifications(transfer.id);
       setRows((current) => current.map((item) => item.id === transfer.id
         ? { ...item, status: "payout_confirmed", completion_reference: typeof data === "string" ? data : item.completion_reference }
         : item
