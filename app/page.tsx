@@ -114,7 +114,9 @@ export default function Home() {
                 <a className="country-chip" key={country.name} href={`/destinations/${country.name.toLowerCase()}`}><span className="flag">{country.flag}</span>{country.name}<small className="country-explore">Explore country ↗</small></a>
               ))}
               {moreCountries.map(([flag, name]) => (
-                <div className="country-chip" key={name}><span className="flag">{flag}</span>{name}</div>
+                <a className="country-chip" key={name} href={`/destinations/${name.toLowerCase().replaceAll(" ", "-")}`}>
+                  <span className="flag">{flag}</span>{name}<small className="country-explore">Explore country ↗</small>
+                </a>
               ))}
             </div>
           </div>
