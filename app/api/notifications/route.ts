@@ -99,7 +99,7 @@ async function deliverChannel(
 
   if (!recipient) {
     await admin.from("transfer_completion_notifications")
-      .update({ [statusColumn]: "skipped", [errorColumn]: "No customer recipient address/number is available.", updated_at: new Date().toISOString() })
+      .update({ [statusColumn]: "skipped", [errorColumn]: "No customer recipient address/number is available.", updated_at: new Date().toISOString() } as never)
       .eq("id", job.id);
     return;
   }
@@ -112,7 +112,7 @@ async function deliverChannel(
       [attemptsColumn]: Number(job[attemptsColumn] ?? 0) + 1,
       [errorColumn]: null,
       updated_at: new Date().toISOString(),
-    })
+    } as never)
     .eq("id", job.id)
     .in(statusColumn, ["queued", "failed"])
     .select("id")
@@ -124,7 +124,7 @@ async function deliverChannel(
   try {
     const providerId = await send();
     await admin.from("transfer_completion_notifications")
-      .update({ [statusColumn]: "sent", [providerColumn]: providerId || null, [errorColumn]: null, updated_at: new Date().toISOString() })
+      .update({ [statusColumn]: "sent", [providerColumn]: providerId || null, [errorColumn]: null, updated_at: new Date().toISOString() } as never)
       .eq("id", job.id)
       .eq(statusColumn, "sending");
   } catch (error) {
@@ -137,7 +137,7 @@ async function deliverChannel(
         [statusColumn]: uncertain ? "needs_review" : "failed",
         [errorColumn]: message.slice(0, 1000),
         updated_at: new Date().toISOString(),
-      })
+      } as never)
       .eq("id", job.id)
       .eq(statusColumn, "sending");
   }
