@@ -28,9 +28,9 @@ export default function CashDepositsPage(){
  useEffect(()=>{(async()=>{
   const {data:auth}=await supabase.auth.getUser();if(!auth.user){router.replace("/login");return;}
   const [b,t,d]=await Promise.all([
-   supabase.from("beneficiaries").select("id,destination_country,recipient_full_name,payout_method,bank_name,account_number,upi_id").order("created_at",{ascending:false}),
-   supabase.from("transfers").select("id,transaction_reference,send_amount_aed,status").order("created_at",{ascending:false}),
-   supabase.from("cash_deposit_submissions").select("id,transfer_id,amount_aed,deposit_method,deposit_date,status,created_at,bank_reference,staff_note").order("created_at",{ascending:false})
+   supabase.from("beneficiaries").select("id,destination_country,recipient_full_name,payout_method,bank_name,account_number,upi_id").eq("customer_id",auth.user.id).order("created_at",{ascending:false}),
+   supabase.from("transfers").select("id,transaction_reference,send_amount_aed,status").eq("customer_id",auth.user.id).order("created_at",{ascending:false}),
+   supabase.from("cash_deposit_submissions").select("id,transfer_id,amount_aed,deposit_method,deposit_date,status,created_at,bank_reference,staff_note").eq("customer_id",auth.user.id).order("created_at",{ascending:false})
   ]);
   if(b.error)setError(b.error.message);else{setBeneficiaries((b.data??[]) as Beneficiary[]);if(b.data?.[0])setBeneficiaryId(b.data[0].id);}
   if(t.error)setError(t.error.message);else setTransfers((t.data??[]) as Transfer[]);
@@ -63,8 +63,8 @@ export default function CashDepositsPage(){
    setSuccess("Transaction "+created.created_transaction_reference+" has been created for "+(selected?.recipient_full_name??"your beneficiary")+". Your deposit evidence is pending staff verification. No payout has been initiated.");
    setAmount("");setReference("");setNote("");setFile(null);
    const [t,d]=await Promise.all([
-    supabase.from("transfers").select("id,transaction_reference,send_amount_aed,status").order("created_at",{ascending:false}),
-    supabase.from("cash_deposit_submissions").select("id,transfer_id,amount_aed,deposit_method,deposit_date,status,created_at,bank_reference,staff_note").order("created_at",{ascending:false})
+    supabase.from("transfers").select("id,transaction_reference,send_amount_aed,status").eq("customer_id",auth.user.id).order("created_at",{ascending:false}),
+    supabase.from("cash_deposit_submissions").select("id,transfer_id,amount_aed,deposit_method,deposit_date,status,created_at,bank_reference,staff_note").eq("customer_id",auth.user.id).order("created_at",{ascending:false})
    ]);
    if(!t.error)setTransfers((t.data??[]) as Transfer[]);
    if(!d.error)setDeposits((d.data??[]) as Deposit[]);
