@@ -161,11 +161,15 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
+  let update: TelegramUpdate | undefined;
   try {
-    const update = (await request.json()) as TelegramUpdate;
+    update = (await request.json()) as TelegramUpdate;
+    console.log("[telegram-webhook] Update received", { updateId: update.update_id, hasMessage: Boolean(update.message), hasCallback: Boolean(update.callback_query) });
     await answer(update, new URL(request.url).origin);
+    console.log("[telegram-webhook] Update processed", { updateId: update.update_id });
     return NextResponse.json({ ok: true });
-  } catch {
+  } catch (error) {
+    console.error("[telegram-webhook] Update processing failed", { updateId: update?.update_id, error: error instanceof Error ? error.message : "Unknown error" });
     return NextResponse.json({ error: "Unable to process Telegram update." }, { status: 500 });
   }
 }
