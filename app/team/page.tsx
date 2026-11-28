@@ -255,7 +255,17 @@ export default function TeamPortalPage() {
                   </div>
                 )}
                 {row.status === "payout_confirmed" ? (
-                  <p className="auth-success">Payout confirmed — marked by authorised team staff.</p>
+                  <>
+                    <p className="auth-success">Payout confirmed — marked by authorised team staff.</p>
+                    <div className="account-notice" style={{ marginTop: 10 }}>
+                      <strong>Customer notification delivery</strong>
+                      <p>Email: {notificationStatuses[row.id]?.email_status || "queued"} · WhatsApp: {notificationStatuses[row.id]?.whatsapp_status || "queued"}</p>
+                      {notificationMessages[row.id] && <small>{notificationMessages[row.id]}</small>}
+                      <button type="button" className="btn btn-outline auth-submit" onClick={() => void dispatchCompletionNotifications(row.id)}>
+                        Send / retry customer notifications
+                      </button>
+                    </div>
+                  </>
                 ) : row.status !== "rejected" && row.status !== "cancelled" ? (
                   <button
                     type="button"
