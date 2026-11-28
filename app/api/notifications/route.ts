@@ -152,16 +152,39 @@ export async function POST(request: NextRequest) {
     const url = requiredEnv("NEXT_PUBLIC_SUPABASE_URL");
     const anonKey = requiredEnv("NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY");
     const serviceKey = requiredEnv("SUPABASE_SERVICE_ROLE_KEY");
-    const authClient = createClient(url, anonKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const authClient = createClient(url, anonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
     const { data: authData, error: authError } = await authClient.auth.getUser(token);
-    if (authError || !authData.user) return NextResponse.json({ error: "Invalid session." }, { status: 401 });
+    if (authError || !authData.user) {
+      console.warn("[notifications] session validation failed", authError?.message ?? "No authenticated user");
+      return NextResponse.json({ error: "Invalid session. Please sign in again." }, { status: 401 });
+    }
+
+    // Check membership with the caller's own authenticated session, matching
+    // the Team Portal's RLS-protected membership query. Keep service-role
+    // access only for privileged notification processing after authorization.
+    const { data: membership, error: membershipError } = await authClient
+      .from("team_members").select("role, active").eq("user_id", authData.user.id).maybeSingle();
+    if (membershipError) {
+      console.error("[notifications] team membership lookup failed", {
+        code: membershipError.code,
+        message: membershipError.message,
+        userId: authData.user.id,
+      });
+      return NextResponse.json({ error: "Unable to verify team permissions. Please contact the administrator." }, { status: 500 });
+    }
+    if (!membership?.active || !["owner", "admin", "staff"].includes(membership.role)) {
+      console.warn("[notifications] authenticated user has no permitted active team membership", {
+        userId: authData.user.id,
+        role: membership?.role ?? null,
+        active: membership?.active ?? null,
+      });
+      return NextResponse.json({ error: "Your account does not have an active owner, admin, or staff team role." }, { status: 403 });
+    }
 
     const admin = createClient(url, serviceKey, { auth: { persistSession: false, autoRefreshToken: false } });
-    const { data: membership, error: membershipError } = await admin
-      .from("team_members").select("role, active").eq("user_id", authData.user.id).maybeSingle();
-    if (membershipError || !membership?.active || !["owner", "admin", "staff"].includes(membership.role)) {
-      return NextResponse.json({ error: "Active team permission required." }, { status: 403 });
-    }
 
     const body = await request.json().catch(() => ({}));
     const transferId = typeof body.transferId === "string" ? body.transferId : "";
