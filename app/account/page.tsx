@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { supabase } from "../../lib/supabase/client";
+import WalletPanel from "./wallet-panel";
 
 type Transfer = {
   id: string;
@@ -101,6 +102,8 @@ export default function AccountPage() {
         <p className="eyebrow auth-eyebrow">Customer dashboard</p>
         <h1>Welcome to DirhamLink</h1>
         <p className="auth-intro">You are signed in as <strong>{email}</strong>.</p>
+
+        <WalletPanel />
 
         <div className="dashboard-section-title">Your services</div>
         <div className="dashboard-grid">
