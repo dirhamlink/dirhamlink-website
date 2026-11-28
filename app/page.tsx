@@ -1,19 +1,6 @@
 import CurrencyCalculator from "./components/currency-calculator";
 import LiveRateBoard from "./components/live-rate-board";
-
-const destinations = [
-  { name: "India", flag: "🇮🇳", currency: "INR" },
-  { name: "Pakistan", flag: "🇵🇰", currency: "PKR" },
-  { name: "Nepal", flag: "🇳🇵", currency: "NPR" },
-  { name: "Bangladesh", flag: "🇧🇩", currency: "BDT" },
-  { name: "Egypt", flag: "🇪🇬", currency: "EGP" },
-  { name: "Philippines", flag: "🇵🇭", currency: "PHP" },
-];
-
-const moreCountries = [
-  ["🇱🇰", "Sri Lanka"], ["🇮🇩", "Indonesia"], ["🇹🇭", "Thailand"],
-  ["🇻🇳", "Vietnam"], ["🇨🇳", "China"], ["🇺🇬", "Uganda"],
-];
+import { destinations } from "../lib/destination-info";
 
 function BrandMark() {
   return (
@@ -111,12 +98,7 @@ export default function Home() {
             </div>
             <div className="country-grid">
               {destinations.map((country) => (
-                <a className="country-chip" key={country.name} href={`/destinations/${country.name.toLowerCase()}`}><span className="flag">{country.flag}</span>{country.name}<small className="country-explore">Explore country ↗</small></a>
-              ))}
-              {moreCountries.map(([flag, name]) => (
-                <a className="country-chip" key={name} href={`/destinations/${name.toLowerCase().replaceAll(" ", "-")}`}>
-                  <span className="flag">{flag}</span>{name}<small className="country-explore">Explore country ↗</small>
-                </a>
+                <a className="country-chip" key={country.slug} href={`/destinations/${country.slug}`}><span className="flag">{country.flag}</span>{country.name}<small className="country-explore">Explore travel destinations ↗</small></a>
               ))}
             </div>
           </div>
