@@ -514,8 +514,16 @@ export default function SendMoneyPage() {
               <option>Bank CDM deposit</option>
               <option>Office cash deposit</option>
               <option>Cash pickup arrangement</option>
+              <option>Pay by BOTIM Wallet</option>
             </select>
           </label>
+          {funding === "Pay by BOTIM Wallet" && (
+            <div className="account-notice" role="status">
+              <strong>BOTIM Wallet payment number</strong>
+              <p style={{ margin: "8px 0 0" }}>+971 56 510 7701</p>
+              <small>Use this number only after DirhamLink staff confirms your transaction and provides approved payment instructions. Your selection is a planned funding preference, not confirmation that payment has been received.</small>
+            </div>
+          )}
 
           <label>
             Additional note (optional)
