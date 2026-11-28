@@ -33,7 +33,21 @@ export async function GET(request: Request) {
     if (!response.ok || !result.ok) {
       return NextResponse.json({ error: "Telegram rejected the webhook setup.", details: result.description ?? "Unknown Telegram API error." }, { status: 502 });
     }
-    return NextResponse.json({ ok: true, message: "Telegram webhook connected.", webhook: webhookUrl });
+    const infoResponse = await fetch(`https://api.telegram.org/bot${token}/getWebhookInfo`, { cache: "no-store" });
+    const infoResult = await infoResponse.json();
+    const info = infoResult?.result ?? {};
+    return NextResponse.json({
+      ok: true,
+      message: "Telegram webhook connected.",
+      webhook: webhookUrl,
+      diagnostics: {
+        urlMatches: info.url === webhookUrl,
+        pendingUpdateCount: info.pending_update_count ?? null,
+        lastErrorDate: info.last_error_date ?? null,
+        lastErrorMessage: info.last_error_message ?? null,
+        allowedUpdates: info.allowed_updates ?? [],
+      },
+    });
   } catch {
     return NextResponse.json({ error: "Could not reach Telegram to register the webhook." }, { status: 502 });
   }
