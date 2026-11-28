@@ -86,7 +86,7 @@ async function sendWhatsApp(input: {
 }
 
 async function deliverChannel(
-  admin: ReturnType<typeof createClient>,
+  admin: any,
   job: Record<string, any>,
   channel: Channel,
   recipient: string | null,
