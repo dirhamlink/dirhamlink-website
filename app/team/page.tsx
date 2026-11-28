@@ -154,6 +154,16 @@ export default function TeamPortalPage() {
     }
   }
 
+  async function debitWallet(transfer: TeamTransfer) {
+    if (!window.confirm(`Debit AED ${Number(transfer.send_amount_aed).toFixed(2)} from this customer's verified wallet for ${transfer.transaction_reference}? This action is recorded and cannot be repeated.`)) return;
+    setCompletionError("");
+    setCompletingId(transfer.id);
+    const { error } = await supabase.rpc("staff_debit_customer_wallet", { p_transfer_id: transfer.id });
+    if (error) setCompletionError(error.message);
+    else setCompletionError("Wallet debit recorded for " + transfer.transaction_reference + ".");
+    setCompletingId(null);
+  }
+
   async function signOut() {
     await supabase.auth.signOut();
     router.replace("/login");
